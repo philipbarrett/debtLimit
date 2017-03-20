@@ -91,10 +91,10 @@ sol.nonstoch.tri <- function(params){
   return(out)
 }
 
-q.fn <- function( p, params, qe, def ){
+q.fn <- function( p, params, An, def ){
 # Wrapper for q_fn
   return( q_fn(params$R, p, params$trans, params$lambda, params$phi, length(params$R),
-               params$cont.type, params$G, qe, def ) )
+               params$cont.type, params$G, An, def ) )
 }
 
 max.d.s.lin <- function( params, A, B ){
@@ -139,24 +139,81 @@ max.d.s.lin.tri <- function( params, A, B ){
   return(0)
 }
 
-d.init.p <- function( params, qe=c(0), qd=c(0), def=matrix(0), p=NULL, x.sd=-3 ){
+d.init.p <- function( params, An=c(0), Cn=c(0), def=matrix(0), p=NULL, x.sd=-3 ){
 # Computes the initial value of the vector d such that a shock x.sd standard
 # deviations below the mean is required to produce default, using the equation:
-#     s + x.sd * s.sd + d = d * ((1-lambda)+qd) / ((1+g)*q)
+#     s + x.sd * s.sd + d = d * ((1-lambda)+lambda*qd) / ((1+g)*q)
 
 
   if(is.null(p)) p <- 0 * params$R
       # Set the initial probabilities to zero if missing.
-  q <- q.fn( p, params, qe, def )
+  q <- q.fn( p, params, An, def )
       # The price in the current period
-  if( params$qd.internal ) qd <- q
+  qd <- if( params$cont.type != 'fix' ) q else Cn
       # The continuation price
-  A <- x.sd * params$surp.sd
+  A <- - x.sd * params$surp.sd
       # The intercept
   B <- ( 1 - params$lambda + params$lambda * qd ) / ( params$G * q ) - 1
       # The slope
   return( max.d.s.lin( params, A, B ) )
 }
 
+p.d.init <- function( params, qe=c(0), qd=c(0), def=matrix(0), p=NULL, x.sd=-2 ){
+# Computes an initial guess for (p,d) satisfying z=1 and z' > 1
 
+  if(is.null(p)) p <- 0 * params$R
+      # Set the initial probabilities to zero if missing.
+  fn <- function(p){
+    # The function for which we want to find the root
+    d <- d.init.p( params, qe, qd, def, p, x.sd )
+        # Find the corresponding d
+    z <- zed( p, d, params, qd, qe, def )
+        # The vector of: the implied value of p and the gradient wrt p
+    return( z - p )
+        # Because we want to find the fixed point
+  }
+  control <- list( maxit=500, allowSingular =TRUE, ftol=1e-10, xtol=1e-12 )
+  sol <- nleqslv( p, fn, control = control )
+      # The solution object
+  p <- sol$x
+  d <- d.init.p( params, qe, qd, def, p, x.sd )
+  err <- sol$fvec
+      # The solution
+  return( list( p=p, d=d, err=err ) )
+}
 
+p.init.d <- function( params, p, d, An, Bn, Cn, def ){
+# Finds a quick initial quess of p as the minimizer of z-p in each dimension
+  p.seq <- seq(0,1,by=.001)
+      # The x-values
+  n <- length(params$R)
+      # The number of states
+  z <- sapply( 1:n, function(i)
+                sapply( p.seq, function(p.i){
+                  this.p <- p
+                  this.p[i] <- p.i
+                  return( zed(this.p, d, params, An, Cn, def )[i] )
+                } ) )
+      # Z
+  z.p <- sapply( 1:n, function(i)
+                sapply( p.seq, function(p.i){
+                  this.p <- p
+                  this.p[i] <- p.i
+                  return( zed_2(this.p, d, params, An, Bn, Cn, def )[i,2] )
+                } ) )
+      # Derivative
+  bo.cand <- apply( z.p, 2, function(x) (abs(x-1)<1e-01) )
+      # Matrix of candidates with derivative v. close to unity
+  p.out <- sapply( 1:n, function(i)
+        p.seq[bo.cand[,i]][which.min((z[,i]-p.seq)[bo.cand[,i]])] )
+      # Select the lowest score of z-p from the possible candidates
+  z.out <- sapply( 1:n, function(i){
+                                this.p <- p
+                                this.p[i] <- p.out[i]
+                                return( zed(this.p, d, params, An, Cn, def )[i] )
+                              } )
+      # The corresponding z
+  out <- sapply( 1:n, function(i) if( z.out[i] - p.out[i] > z[1,i] ) 0 else p.out[i] )
+      # If zero does better, replace
+  return( out )
+}

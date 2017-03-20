@@ -7,8 +7,8 @@
 using namespace Rcpp;
 
 // q_fn
-arma::vec q_fn(arma::vec R, arma::vec p, arma::mat trans, double lambda, double phi, int n, std::string cont_type, arma::vec G, arma::vec q_e, arma::mat def);
-RcppExport SEXP debtLimits_q_fn(SEXP RSEXP, SEXP pSEXP, SEXP transSEXP, SEXP lambdaSEXP, SEXP phiSEXP, SEXP nSEXP, SEXP cont_typeSEXP, SEXP GSEXP, SEXP q_eSEXP, SEXP defSEXP) {
+arma::vec q_fn(arma::vec R, arma::vec p, arma::mat trans, double lambda, double phi, int n, std::string cont_type, arma::vec G, arma::vec An, arma::mat def);
+RcppExport SEXP debtLimits_q_fn(SEXP RSEXP, SEXP pSEXP, SEXP transSEXP, SEXP lambdaSEXP, SEXP phiSEXP, SEXP nSEXP, SEXP cont_typeSEXP, SEXP GSEXP, SEXP AnSEXP, SEXP defSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -20,9 +20,52 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type n(nSEXP);
     Rcpp::traits::input_parameter< std::string >::type cont_type(cont_typeSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type G(GSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type q_e(q_eSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type An(AnSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type def(defSEXP);
-    rcpp_result_gen = Rcpp::wrap(q_fn(R, p, trans, lambda, phi, n, cont_type, G, q_e, def));
+    rcpp_result_gen = Rcpp::wrap(q_fn(R, p, trans, lambda, phi, n, cont_type, G, An, def));
+    return rcpp_result_gen;
+END_RCPP
+}
+// q_d_p
+arma::mat q_d_p(arma::vec R, arma::vec p, arma::mat trans, double lambda, double phi, int n, std::string cont_type, std::string d_type, arma::vec G, arma::vec An, arma::vec Bn, arma::mat def);
+RcppExport SEXP debtLimits_q_d_p(SEXP RSEXP, SEXP pSEXP, SEXP transSEXP, SEXP lambdaSEXP, SEXP phiSEXP, SEXP nSEXP, SEXP cont_typeSEXP, SEXP d_typeSEXP, SEXP GSEXP, SEXP AnSEXP, SEXP BnSEXP, SEXP defSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type R(RSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type p(pSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type trans(transSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< double >::type phi(phiSEXP);
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< std::string >::type cont_type(cont_typeSEXP);
+    Rcpp::traits::input_parameter< std::string >::type d_type(d_typeSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type G(GSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type An(AnSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Bn(BnSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type def(defSEXP);
+    rcpp_result_gen = Rcpp::wrap(q_d_p(R, p, trans, lambda, phi, n, cont_type, d_type, G, An, Bn, def));
+    return rcpp_result_gen;
+END_RCPP
+}
+// q_d_p_num_i
+arma::vec q_d_p_num_i(arma::vec R, arma::vec p, arma::mat trans, double lambda, double phi, int n, int i, std::string cont_type, arma::vec G, arma::vec An, arma::mat def);
+RcppExport SEXP debtLimits_q_d_p_num_i(SEXP RSEXP, SEXP pSEXP, SEXP transSEXP, SEXP lambdaSEXP, SEXP phiSEXP, SEXP nSEXP, SEXP iSEXP, SEXP cont_typeSEXP, SEXP GSEXP, SEXP AnSEXP, SEXP defSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type R(RSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type p(pSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type trans(transSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< double >::type phi(phiSEXP);
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< int >::type i(iSEXP);
+    Rcpp::traits::input_parameter< std::string >::type cont_type(cont_typeSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type G(GSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type An(AnSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type def(defSEXP);
+    rcpp_result_gen = Rcpp::wrap(q_d_p_num_i(R, p, trans, lambda, phi, n, i, cont_type, G, An, def));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -136,56 +179,57 @@ BEGIN_RCPP
 END_RCPP
 }
 // zed
-arma::vec zed(arma::vec p, arma::vec d, List params, arma::vec qd, arma::vec qe, arma::mat def);
-RcppExport SEXP debtLimits_zed(SEXP pSEXP, SEXP dSEXP, SEXP paramsSEXP, SEXP qdSEXP, SEXP qeSEXP, SEXP defSEXP) {
+arma::vec zed(arma::vec p, arma::vec d, List params, arma::vec An, arma::vec Cn, arma::mat def);
+RcppExport SEXP debtLimits_zed(SEXP pSEXP, SEXP dSEXP, SEXP paramsSEXP, SEXP AnSEXP, SEXP CnSEXP, SEXP defSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::vec >::type p(pSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type d(dSEXP);
     Rcpp::traits::input_parameter< List >::type params(paramsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type qd(qdSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type qe(qeSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type An(AnSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Cn(CnSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type def(defSEXP);
-    rcpp_result_gen = Rcpp::wrap(zed(p, d, params, qd, qe, def));
+    rcpp_result_gen = Rcpp::wrap(zed(p, d, params, An, Cn, def));
     return rcpp_result_gen;
 END_RCPP
 }
 // zed_2
-arma::mat zed_2(arma::vec p, arma::vec d, List params, arma::vec qd, arma::vec qe, arma::mat def);
-RcppExport SEXP debtLimits_zed_2(SEXP pSEXP, SEXP dSEXP, SEXP paramsSEXP, SEXP qdSEXP, SEXP qeSEXP, SEXP defSEXP) {
+arma::mat zed_2(arma::vec p, arma::vec d, List params, arma::vec An, arma::vec Bn, arma::vec Cn, arma::mat def);
+RcppExport SEXP debtLimits_zed_2(SEXP pSEXP, SEXP dSEXP, SEXP paramsSEXP, SEXP AnSEXP, SEXP BnSEXP, SEXP CnSEXP, SEXP defSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::vec >::type p(pSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type d(dSEXP);
     Rcpp::traits::input_parameter< List >::type params(paramsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type qd(qdSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type qe(qeSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type An(AnSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Bn(BnSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Cn(CnSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type def(defSEXP);
-    rcpp_result_gen = Rcpp::wrap(zed_2(p, d, params, qd, qe, def));
+    rcpp_result_gen = Rcpp::wrap(zed_2(p, d, params, An, Bn, Cn, def));
     return rcpp_result_gen;
 END_RCPP
 }
 // zed_2_num
-arma::mat zed_2_num(arma::vec p, arma::vec d, List params, arma::vec qd, arma::vec qe, arma::mat def);
-RcppExport SEXP debtLimits_zed_2_num(SEXP pSEXP, SEXP dSEXP, SEXP paramsSEXP, SEXP qdSEXP, SEXP qeSEXP, SEXP defSEXP) {
+arma::mat zed_2_num(arma::vec p, arma::vec d, List params, arma::vec Cn, arma::vec An, arma::mat def);
+RcppExport SEXP debtLimits_zed_2_num(SEXP pSEXP, SEXP dSEXP, SEXP paramsSEXP, SEXP CnSEXP, SEXP AnSEXP, SEXP defSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::vec >::type p(pSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type d(dSEXP);
     Rcpp::traits::input_parameter< List >::type params(paramsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type qd(qdSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type qe(qeSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Cn(CnSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type An(AnSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type def(defSEXP);
-    rcpp_result_gen = Rcpp::wrap(zed_2_num(p, d, params, qd, qe, def));
+    rcpp_result_gen = Rcpp::wrap(zed_2_num(p, d, params, Cn, An, def));
     return rcpp_result_gen;
 END_RCPP
 }
 // zed_2_num_d_i
-double zed_2_num_d_i(arma::vec p, arma::vec d, List params, int i, arma::vec qd, arma::vec qe, arma::mat def);
-RcppExport SEXP debtLimits_zed_2_num_d_i(SEXP pSEXP, SEXP dSEXP, SEXP paramsSEXP, SEXP iSEXP, SEXP qdSEXP, SEXP qeSEXP, SEXP defSEXP) {
+double zed_2_num_d_i(arma::vec p, arma::vec d, List params, int i, arma::vec An, arma::vec Cn, arma::mat def);
+RcppExport SEXP debtLimits_zed_2_num_d_i(SEXP pSEXP, SEXP dSEXP, SEXP paramsSEXP, SEXP iSEXP, SEXP AnSEXP, SEXP CnSEXP, SEXP defSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -193,10 +237,27 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type d(dSEXP);
     Rcpp::traits::input_parameter< List >::type params(paramsSEXP);
     Rcpp::traits::input_parameter< int >::type i(iSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type qd(qdSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type qe(qeSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type An(AnSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Cn(CnSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type def(defSEXP);
-    rcpp_result_gen = Rcpp::wrap(zed_2_num_d_i(p, d, params, i, qd, qe, def));
+    rcpp_result_gen = Rcpp::wrap(zed_2_num_d_i(p, d, params, i, An, Cn, def));
+    return rcpp_result_gen;
+END_RCPP
+}
+// zed_2_ana
+arma::mat zed_2_ana(arma::vec p, arma::vec d, List params, arma::vec An, arma::vec Bn, arma::vec Cn, arma::mat def);
+RcppExport SEXP debtLimits_zed_2_ana(SEXP pSEXP, SEXP dSEXP, SEXP paramsSEXP, SEXP AnSEXP, SEXP BnSEXP, SEXP CnSEXP, SEXP defSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type p(pSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type d(dSEXP);
+    Rcpp::traits::input_parameter< List >::type params(paramsSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type An(AnSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Bn(BnSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Cn(CnSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type def(defSEXP);
+    rcpp_result_gen = Rcpp::wrap(zed_2_ana(p, d, params, An, Bn, Cn, def));
     return rcpp_result_gen;
 END_RCPP
 }

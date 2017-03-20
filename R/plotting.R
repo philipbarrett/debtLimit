@@ -29,25 +29,26 @@ plot.surp <- function(params, non.stoch=TRUE, x.lim=c(0,200), ... ){
   }
 }
 
-plot.z <- function( p, d, params, qd=c(0), qe=c(0), def=matrix(0) ){
+plot.z <- function( p, d, params, An=c(0), Bn=c(0), Cn=c(0), def=matrix(0) ){
 # Plots the zed function for all the values of i
   n <- length(params$R)
   n.x <- ceiling( sqrt(n) )
   n.y <- ceiling( n / n.x )
   par(mfrow=c(n.y,n.x))
+  global.apx <- p.init.d( params, p, d, An, Bn, Cn, def )
   for( i in 1:n )
-    plot.z.i( p, d, params, i, qd, qe, def )
+    plot.z.i( p, d, params, i, An, Bn, Cn, def, global.apx[i] )
   par(mfrow=c(1,1))
 }
 
-plot.z.i <- function( p, d, params, i, qd, qe, def ){
+plot.z.i <- function( p, d, params, i, An, Bn, Cn, def, global=NULL ){
 # Plots the z function vs. p[i] in state i
   p.seq <- seq(0,1,by=.001)
       # The x-values
   y.vals <- t( sapply( p.seq, function(p.i){
     this.p <- p
     this.p[i] <- p.i
-    return( zed_2(this.p, d, params, qd, qe, def )[i,] )
+    return( zed_2(this.p, d, params, An, Bn, Cn, def )[i,] )
   } ) )
       # The y values
   plot( p.seq, y.vals[,1], lwd=2, xlab='p', ylab='z', main=paste0( 'i = ', i ), type='l', ylim=c(0,1) )
@@ -55,6 +56,8 @@ plot.z.i <- function( p, d, params, i, qd, qe, def ){
   abline( v=p[i], lty=2 )
   abline( h=p[i], lty=2 )
       # The level
+  abline( v=global, lty=2, col='blue' )
+      # The global minimum
   par(new = TRUE)
   y.range <- c( max( min(c(0, y.vals[,2]), na.rm = TRUE), -10 ),
                 min( max(y.vals[,2], na.rm = TRUE ), 10 ) )
@@ -68,32 +71,31 @@ plot.z.i <- function( p, d, params, i, qd, qe, def ){
       # Axis labelling
 }
 
-plot.q <- function( p, params ){
-# Plots the zed function for all the values of i
+plot.q <- function( p, params, An=NULL, def=NULL ){
+# Plots the q function for all the values of i
   n <- length(params$R)
   n.x <- ceiling( sqrt(n) )
   n.y <- ceiling( n / n.x )
   par(mfrow=c(n.y,n.x))
   for( i in 1:n )
-    plot.q.i( p, params, i )
+    plot.q.i( p, params, i, An, def )
   par(mfrow=c(1,1))
 }
 
-plot.q.i <- function( p, params, i ){
+plot.q.i <- function( p, params, i, An=NULL, def=NULL ){
 # Plots the q function vs. p[i] in state i
   p.seq <- seq(0,1,by=.001)
       # The x-values
   n <- length(params$R)
       # Number of states
-  if( params$cont.type %in% c( 'fix', 'def' ) ){
-    stop('Plotting only works for cont.type "avg" or "low".')
-  }
-      # Stop if plotting not ready for this bit yet
+  if( is.null(An) ) An <- c(0)
+  if( is.null(def) ) def <- matrix(0,1,1)
+      # Fill in An and def if required
   y.vals <- sapply( p.seq, function(p.i){
     this.p <- p
     this.p[i] <- p.i
     return( q_fn(params$R, this.p, params$trans, params$lambda, params$phi, n,
-                 params$cont.type, params$G, c(0), matrix(0,1,1) ) )
+                 params$cont.type, params$G, An, def ) )
   } )
       # The y values
   plot( range(p.seq), range(y.vals), xlab='p', ylab='q', main=paste0( 'i = ', i ), type='n', ylim=c(0,1) )
