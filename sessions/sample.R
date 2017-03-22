@@ -32,7 +32,7 @@ Cn <- An
 def <- matrix(0,1,1)
 
 ## 2. Plot surplus function(s) ##
-plot.surp(params, ylim=c(-5, 15))
+plot.surp(params)
 
 ## 3. Solve the model ##
 d.init <- sol.nonstoch(params)
@@ -106,15 +106,31 @@ for( j in 1:8 ){
     p.guess <- sol.i$p
     d.guess <- sol.i$d
     p.guess[i] <- p.init.d( params, sol.i$p, sol.i$d, An, Bn, Cn, def )[i]
-    sol.i <- sol.wrapper( params, cbind( p.guess, d.guess ), 'core.nl.i', i=i )
+    sol.i <- sol.core.global( params, cbind( p.guess, d.guess), 'core.nl.i',
+                              An, Bn, Cn, def, i )
     plot.z( sol.i$p, sol.i$d, params )
   }
 }
-system.time( sol <- sol.wrapper( params, cbind( sol.i$p, sol.i$d ),
-                                 'core.nl' ) )
+system.time( sol <- sol.core.global( params, cbind( sol.i$p, sol.i$d ),
+                                 'core.nl', An, Bn, Cn, def ) )
+    # Explicit iterations
+
+Rprof(NULL)
+Rprof('sol.rprof')
+sol.w <- sol.wrapper( params )
+    # Supress in the wrapper
+Rprof(NULL)
+summaryRprof('sol.rprof')
+
 plot.z( sol$p, sol$d, params )
-# plot.q( sol$p, params )
-# params$cont.type <- 'low'
-# sol <- sol.wrapper( params, cbind( init.guess.avg$p, init.guess.avg$d ), 'core.nl' )
-# plot.z( sol$p, sol$d, params, sol$qd, sol$qe, sol$def )
-# plot.q( sol$p, params )
+plot.z( sol.w$p, sol.w$d, params )
+
+params$lambda <- .4
+sol.l <- sol.wrapper( params )
+plot.z( sol.l$p, sol.l$d, params, An, Bn, Cn )
+
+params$cont.type <- 'fix'
+sol.f <- sol.wrapper( params, An=An, Bn=Bn, Cn=Cn )
+plot.z( sol.f$p, sol.f$d, params, An, Bn, Cn )
+
+

@@ -6,6 +6,41 @@
 
 using namespace Rcpp;
 
+// p_init_d_i
+double p_init_d_i(List params, arma::vec p, arma::vec d, arma::vec An, arma::vec Bn, arma::vec Cn, arma::mat def, int i);
+RcppExport SEXP debtLimits_p_init_d_i(SEXP paramsSEXP, SEXP pSEXP, SEXP dSEXP, SEXP AnSEXP, SEXP BnSEXP, SEXP CnSEXP, SEXP defSEXP, SEXP iSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type params(paramsSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type p(pSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type d(dSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type An(AnSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Bn(BnSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Cn(CnSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type def(defSEXP);
+    Rcpp::traits::input_parameter< int >::type i(iSEXP);
+    rcpp_result_gen = Rcpp::wrap(p_init_d_i(params, p, d, An, Bn, Cn, def, i));
+    return rcpp_result_gen;
+END_RCPP
+}
+// p_init_d
+arma::vec p_init_d(List params, arma::vec p, arma::vec d, arma::vec An, arma::vec Bn, arma::vec Cn, arma::mat def);
+RcppExport SEXP debtLimits_p_init_d(SEXP paramsSEXP, SEXP pSEXP, SEXP dSEXP, SEXP AnSEXP, SEXP BnSEXP, SEXP CnSEXP, SEXP defSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type params(paramsSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type p(pSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type d(dSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type An(AnSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Bn(BnSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Cn(CnSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type def(defSEXP);
+    rcpp_result_gen = Rcpp::wrap(p_init_d(params, p, d, An, Bn, Cn, def));
+    return rcpp_result_gen;
+END_RCPP
+}
 // q_fn
 arma::vec q_fn(arma::vec R, arma::vec p, arma::mat trans, double lambda, double phi, int n, std::string cont_type, arma::vec G, arma::vec An, arma::mat def);
 RcppExport SEXP debtLimits_q_fn(SEXP RSEXP, SEXP pSEXP, SEXP transSEXP, SEXP lambdaSEXP, SEXP phiSEXP, SEXP nSEXP, SEXP cont_typeSEXP, SEXP GSEXP, SEXP AnSEXP, SEXP defSEXP) {

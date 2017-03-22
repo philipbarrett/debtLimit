@@ -35,7 +35,7 @@ plot.z <- function( p, d, params, An=c(0), Bn=c(0), Cn=c(0), def=matrix(0) ){
   n.x <- ceiling( sqrt(n) )
   n.y <- ceiling( n / n.x )
   par(mfrow=c(n.y,n.x))
-  global.apx <- p.init.d( params, p, d, An, Bn, Cn, def )
+  global.apx <- p_init_d( params, p, d, An, Bn, Cn, def )
   for( i in 1:n )
     plot.z.i( p, d, params, i, An, Bn, Cn, def, global.apx[i] )
   par(mfrow=c(1,1))
