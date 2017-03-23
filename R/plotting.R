@@ -71,6 +71,49 @@ plot.z.i <- function( p, d, params, i, An, Bn, Cn, def, global=NULL ){
       # Axis labelling
 }
 
+plot.z.d <- function( p, d, params, An=c(0), Bn=c(0), Cn=c(0), def=matrix(0),
+                    d.range=c(0,200) ){
+# Plots the zed function for all the values of i
+  n <- length(params$R)
+  n.x <- ceiling( sqrt(n) )
+  n.y <- ceiling( n / n.x )
+  par(mfrow=c(n.y,n.x))
+  # global.apx <- p_init_d( params, p, d, An, Bn, Cn, def )
+  for( i in 1:n )
+    plot.z.d.i( p, d, params, i, An, Bn, Cn, def, d.range )
+  par(mfrow=c(1,1))
+}
+
+plot.z.d.i <- function( p, d, params, i, An, Bn, Cn, def, d.range=c(0,200), global=NULL ){
+# Plots the z function vs. d[i] in state i
+  d.seq <- seq(d.range[1], d.range[2],length.out=1000)
+      # The x-values
+  y.vals <- t( sapply( d.seq, function(d.i){
+    this.d <- d
+    this.d[i] <- d.i
+    return( zed_2(p, this.d, params, An, Bn, Cn, def )[i,] )
+  } ) )
+  # The y values
+  plot( d.seq, y.vals[,1], lwd=2, xlab='p', ylab='z', main=paste0( 'i = ', i ), type='l', ylim=c(0,1) )
+  # abline( 0, 1, lty=2 )
+  abline( v=d[i], lty=2 )
+  abline( h=p[i], lty=2 )
+      # The level
+  abline( v=global, lty=2, col='blue' )
+      # The global minimum
+  par(new = TRUE)
+  y.range <- c( max( min(c(0, y.vals[,2]), na.rm = TRUE), -10 ),
+                min( max(y.vals[,2], na.rm = TRUE ), 10 ) )
+      # The y limits for the derivative
+  plot( d.seq, y.vals[,2], type = "l", col='red', axes = FALSE, bty = "n",
+        xlab = "", ylab = "", ylim=y.range )
+      # Plot the derivative
+  axis(side=4, at = pretty(y.range))
+      # mtext("z.p", side=4, line=3)
+  abline( h=1, lty=2, col='red' )
+      # Axis labelling
+}
+
 plot.q <- function( p, params, An=NULL, def=NULL ){
 # Plots the q function for all the values of i
   n <- length(params$R)

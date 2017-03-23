@@ -103,7 +103,7 @@ sol.core.global <- function( params, init.guess, st.which.sol, An, Bn, Cn, def, 
 
   out <- list( p=guess[,1], d=guess[,2], err = matrix( sol$fvec, nrow = n, ncol = 2 ),
                accy <- max( abs( sol$fvec ) ) < 1e-08, An=An, Bn=Bn, Cn=Cn, def=def,
-               sol=sol, it=it, diff=abs( cand.p - p.global ) )
+               sol=sol, it=it, diff=abs( cand.p - p.global ), params=params )
 }
 
 
@@ -144,16 +144,20 @@ sol.core.nl.i <- function(params, init.guess, An, Bn, Cn, def, i){
     p <- pmax( init.guess[,1], 0 )
     d <- init.guess[,2]
         # Extract the values for the unchanging states
-    p[i] <- max( x[1], 0 )
+    p[i] <- x[1]
     d[i] <- x[2]
         # Update dimension i
     z.2 <- zed_2( p, d, params, An, Bn, Cn, def )[i,]
         # The vector of: the implied value of p and the gradient wrt p
     if( p[i] < 0 ){
-      return( z.2 - c( p[i], 1 ) + p[i] ^ 2 )
+      p[i] <- 0
+      z.2 <- zed_2( p, d, params, An, Bn, Cn, def )[i,]
+      return( z.2 - c( x[1], 1 ) + x[1] ^ 2 )
     }
     if( p[i] > 1 ){
-      return( z.2 - c( p[i], 1 ) - ( p[i] - 1 ) ^ 2 )
+      p[i] <- 1
+      z.2 <- zed_2( p, d, params, An, Bn, Cn, def )[i,]
+      return( z.2 - c( x[1], 1 ) + ( x[1] - 1 ) ^ 2 )
     }
     return( z.2 - c( p[i], 1 ) )
         # Becuase we want the slope to be unity at the fixed point

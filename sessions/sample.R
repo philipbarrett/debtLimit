@@ -26,6 +26,7 @@ params$cont.type <- 'avg'
 params$q.e <- c(0)
 params$def <- matrix(0,1,1)
 params$diff.method <- "num"
+params$d.tri <- TRUE # FALSE      # Triangular distribution for surplus shocks
 An <- 1 / params$R
 Bn <- rep( -1, length(params$R) )
 Cn <- An
@@ -81,6 +82,13 @@ plot.z( init.guess.avg$p, init.guess.avg$d, params )
 params$diff.method <- 'ana'
 plot.z( init.guess.avg$p, init.guess.avg$d, params )
 
+params$d.tri <- FALSE
+params$diff.method <- 'num'
+plot.z( init.guess.avg$p, init.guess.avg$d, params )
+params$diff.method <- 'ana'
+plot.z( init.guess.avg$p, init.guess.avg$d, params )
+
+
 microbenchmark(zed( 0*params$R, d.init, params, An, Cn, def ))
     # Eval: ~12ms
 
@@ -100,12 +108,13 @@ print(a/b)
 params$cont.type <- 'avg'
 
 sol.i <- init.guess.avg
+
 plot.z( init.guess.avg$p, init.guess.avg$d, params )
-for( j in 1:8 ){
+for( j in 1:5 ){
   for( i in 1:length(params$R) ){
     p.guess <- sol.i$p
     d.guess <- sol.i$d
-    p.guess[i] <- p.init.d( params, sol.i$p, sol.i$d, An, Bn, Cn, def )[i]
+    # p.guess[i] <- p.init.d( params, sol.i$p, sol.i$d, An, Bn, Cn, def )[i]
     sol.i <- sol.core.global( params, cbind( p.guess, d.guess), 'core.nl.i',
                               An, Bn, Cn, def, i )
     plot.z( sol.i$p, sol.i$d, params )
@@ -125,11 +134,21 @@ summaryRprof('sol.rprof')
 plot.z( sol$p, sol$d, params )
 plot.z( sol.w$p, sol.w$d, params )
 
+params$d.tri <- TRUE
+sol.t <- sol.wrapper( params, init.guess = cbind(sol.w$p, sol.w$d) )
+plot.z( sol.t$p, sol.t$d, params )
+params$d.tri <- FALSE
+
+params$lambda <- 0
+sol.s <- sol.wrapper( params, cbind(sol.w$p, sol.w$d) )
+plot.z( sol.s$p, sol.s$d, params )
+
 params$lambda <- .4
 sol.l <- sol.wrapper( params )
-plot.z( sol.l$p, sol.l$d, params, An, Bn, Cn )
+plot.z( sol.l$p, sol.l$d, params )
 
 params$cont.type <- 'fix'
+params$lambda <- .2
 sol.f <- sol.wrapper( params, An=An, Bn=Bn, Cn=Cn )
 plot.z( sol.f$p, sol.f$d, params, An, Bn, Cn )
 

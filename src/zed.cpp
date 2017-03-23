@@ -11,6 +11,7 @@
 #include "zed.hpp"
 #include "surp.hpp"
 #include "q.hpp"
+#include "tri.hpp"
 
 /** NEED TO CHANGE ALL THE qe AND q to An, Bn, ALSO THINK ABOUT Cn **/
 
@@ -29,6 +30,7 @@ arma::vec zed( arma::vec p, arma::vec d, List params, arma::vec An,
   double lambda = params["lambda"] ;
   int n = R.n_elem ;
   bool tri = params["tri"] ;
+  bool d_tri = params["d.tri"] ;
   std::string cont_type = params["cont.type"] ;
 
   /** 2. Create the vector of bond prices consistent with default probabilities **/
@@ -51,7 +53,13 @@ arma::vec zed( arma::vec p, arma::vec d, List params, arma::vec An,
                     d(j) - surp(i) ;
           // Market value of new debt in next period is # of old obligations *
           // current market price.
-      p_H(i,j) = R::pnorm( H(i,j), 0, surp_sd, 1, 0 ) ;
+      if( d_tri ){
+        double ub = surp_sd * std::sqrt( 6.0 ) ;
+            // Var = 18 * (Upper bound) ^ 2 (symmetric triangle case)
+        p_H(i,j) = p_triangle( H(i,j), -ub, 0, ub ) ;
+      }else{
+        p_H(i,j) = R::pnorm( H(i,j), 0, surp_sd, 1, 0 ) ;
+      }
           // Fill these in
     }
   }
@@ -133,6 +141,7 @@ arma::mat zed_2_ana( arma::vec p, arma::vec d, List params, arma::vec An,
   double lambda = params["lambda"] ;
   int n = R.n_elem ;
   bool tri = params["tri"] ;
+  bool d_tri = params["d.tri"] ;
   std::string cont_type = params["cont.type"] ;
 
   /** 2. Create the vector of bond prices consistent with default probabilities **/
@@ -172,6 +181,16 @@ arma::mat zed_2_ana( arma::vec p, arma::vec d, List params, arma::vec An,
           // approximation.
       p_H(i,j) = R::pnorm( H(i,j), 0, surp_sd, 1, 0 ) ;
       p_H_dp(i,j) = R::dnorm( H(i,j), 0, surp_sd, 0 ) ;
+
+      if( d_tri ){
+        double ub = surp_sd * std::sqrt( 6.0 ) ;
+            // Var = 18 * (Upper bound) ^ 2 (symmetric triangle case)
+        p_H(i,j) = p_triangle( H(i,j), -ub, 0, ub ) ;
+        p_H_dp(i,j) = d_triangle( H(i,j), -ub, 0, ub ) ;
+      }else{
+        p_H(i,j) = R::pnorm( H(i,j), 0, surp_sd, 1, 0 ) ;
+        p_H_dp(i,j) = R::dnorm( H(i,j), 0, surp_sd, 0 ) ;
+      }
           // Fill these in too
     }
   }
