@@ -16,7 +16,7 @@
 arma::mat d_prime( int i_x, double d, arma::vec d_bar, double qhat, arma::mat Q,
                    arma::vec d_grid, arma::vec G, double lambda, arma::vec e_grid,
                    arma::vec coeff, bool tri,
-                   arma::mat D_prime_0, bool D_prime_0_flag, bool verbose=true,
+                   arma::mat D_prime_0, bool D_prime_0_flag, int print_level=1,
                    double tol=1e-05, int maxit=20 ){
 // Computes the vector of fixed points for the continuation debt satisfying, for
 // each (x',e):
@@ -49,7 +49,7 @@ arma::mat d_prime( int i_x, double d, arma::vec d_bar, double qhat, arma::mat Q,
     int it = 0 ;
     this_dprime_old = D_prime_0.col(i) ;
         // Iteration variables
-    if(verbose){
+    if( print_level > 0 ){
       Rcout << "\nState " << i << std::endl ;
     }
     vec q_bar = ones(1) ;
@@ -81,7 +81,7 @@ arma::mat d_prime( int i_x, double d, arma::vec d_bar, double qhat, arma::mat Q,
       diff = max( abs( this_dprime.elem(loc_sol) - this_dprime_old.elem(loc_sol) ) ) ;
       this_dprime_old = this_dprime ;
           // Update iteration
-      if(verbose){
+      if( print_level > 0 ){
         Rcout << "  it = " << it << std::endl ;
         Rcout << "  diff = " << diff << std::endl ;
       }
@@ -96,11 +96,12 @@ arma::mat d_prime( int i_x, double d, arma::vec d_bar, double qhat, arma::mat Q,
 
 
 // [[Rcpp::export]]
-arma::vec q_e( double d, arma::vec d_bar, double qhat, arma::mat Q,
+arma::vec q_e( double d, arma::vec d_bar, arma::vec qhat, arma::mat Q,
                    arma::vec d_grid, arma::vec G, double lambda, arma::vec e_grid,
                    arma::vec coeff, bool tri, arma::mat D_prime_0, bool D_prime_0_flag,
-                   arma::mat trans, bool verbose=true, double tol=1e-05, int maxit=20 ){
-// Computes the expected continuation price q_e
+                   arma::mat trans, int print_level=1, double tol=1e-05, int maxit=20 ){
+// Computes the expected continuation price q_e in each state.  Takes as an
+// input a vector of guesses qhat.
 
   int n = d_bar.n_elem ;
   int m = e_grid.n_elem ;
@@ -115,36 +116,78 @@ arma::vec q_e( double d, arma::vec d_bar, double qhat, arma::mat Q,
       // Transpose (need for linear interpolation)
 
   for( int i = 0 ; i < n ; i++ ){
-    temp_dprime = d_prime( i,  d, d_bar, qhat, Q, d_grid, G, lambda, e_grid, coeff,
-                           tri, D_prime_0, D_prime_0_flag, verbose, tol, maxit ) ;
+    temp_dprime = d_prime( i,  d, d_bar, qhat(i), Q, d_grid, G, lambda, e_grid, coeff,
+                           tri, D_prime_0, D_prime_0_flag, print_level - 1, tol, maxit ) ;
         // The continuation debt level
     for( int j = 0 ; j < n ; j++ ){
       interp1( d_grid, Q_t.col(j), temp_dprime.col(j), temp_qprime, "linear", 1 ) ;
       m_qprime.col(j) = temp_qprime ;
     }
     out(i) = dot( trans.row(i), ones<rowvec>(m) * m_qprime / m ) ;
-
-    if(verbose){
-      Rcout << "m_qprime:\n" << m_qprime << std::endl ;
-    }
-
   }
   return out ;
 }
 
 // [[Rcpp::export]]
-arma::vec q_iter_fn( double d, arma::vec p, arma::vec d_bar, double qhat, arma::mat Q,
-               arma::vec d_grid, arma::vec R, arma::vec G, double lambda, double phi, arma::vec e_grid,
-               arma::vec coeff, bool tri, arma::mat D_prime_0, bool D_prime_0_flag,
-               arma::mat trans, bool verbose=true, double tol=1e-05, int maxit=50,
-               double d_tol=1e-05, int d_maxit=20 ){
+arma::vec q_hat_fn( double d, arma::vec p, arma::vec d_bar, arma::vec qhat, arma::mat Q,
+               arma::vec d_grid, arma::vec R, arma::vec G, double lambda, double phi,
+               arma::vec e_grid, arma::vec coeff, bool tri, arma::mat D_prime_0,
+               bool D_prime_0_flag,arma::mat trans, int print_level=1, double tol=1e-05,
+               int maxit=50, double d_tol=1e-05, int d_maxit=20 ){
 // Inner iterator to find the vector of q over x given debt d and next-period
 // default probability p
 
-  // int n = p.n_elem ;
-  // mat def = zeros(1,1) ;
-  //     // Dummy variable
-  // vec q = q_fn( R, p, trans, lambda, phi, n, "fix", G, qe, def ) ;
-  //     // Use fix because computnig qe is the whole point!
+  int n = p.n_elem ;
+      // Number of states
+  vec q = zeros(n) ;
+      // Iitialize output
+  mat def = zeros(1,1) ;
+      // Dummy variable
+  double diff = 2 * tol ;
+  int it = 0 ;
+  vec q_old = 2 * ones(n) ;
+      // Initialize loop variables
+  while( diff > tol && it < maxit ){
+    it++ ;
+    vec qe = q_e( d, d_bar, qhat, Q, d_grid, G, lambda, e_grid, coeff, tri, D_prime_0,
+                  D_prime_0_flag, trans, print_level - 1, d_tol, d_maxit ) ;
+        // Compute expected continuation price
+    q = q_fn( R, p, trans, lambda, phi, n, "fix", G, qe, def ) ;
+        // Use fix because computing qe is the whole point!
+    diff = max( abs( q - qhat) ) ;
+        // The difference
+    qhat = q ;
+        //
+    if( print_level > 0 ){
+      if(print_level > 1){
+        Rcout << std::endl ;
+      }
+      Rcout << "q iteration = " << it << ", diff = " << diff << std::endl ;
+    }
+  }
+  return q ;
+}
 
+// [[Rcpp::export]]
+arma::mat q_hat_mat( arma::mat P, arma::vec d_bar, arma::mat QHat, arma::mat Q,
+                    arma::vec d_grid, arma::vec R, arma::vec G, double lambda, double phi, arma::vec e_grid,
+                    arma::vec coeff, bool tri, arma::mat D_prime_0, bool D_prime_0_flag,
+                    arma::mat trans, int print_level=0, double tol=1e-04, int maxit=50,
+                    double d_tol=1e-05, int d_maxit=20 ){
+// Computes the matrix of debt prices on the grid consistent with the assumed
+// default probabilities.
+
+  mat out = zeros(size(Q)) ;
+      // Initialize output
+  int m = d_grid.n_elem ;
+      // Number of debt levels
+  for( int i = 0 ; i < m ; i++ ){
+    if( print_level > 0 ){
+      Rcout << "\nDebt grid point # " << i << std::endl ;
+    }
+    out.col(i) =  q_hat_fn( d_grid(i), P.col(i), d_bar, QHat.col(i), Q, d_grid, R,
+            G, lambda, phi, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, trans,
+            print_level - 1, tol, maxit, d_tol, d_maxit ) ;
+  }
+  return out ;
 }

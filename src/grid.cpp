@@ -9,10 +9,13 @@
  ***********************************************************************************/
 
 #include "grid.hpp"
+#include "tri.hpp"
 
 // [[Rcpp::export]]
-arma::vec d_grid_fn( arma::vec d, double x_sd, double x_sd_mult=1.1, int n_pts=7 ){
-// Creates the vector of grid points for d
+arma::vec d_grid_fn( arma::vec d, double x_sd, double x_sd_mult=1.5, int n_pts=11,
+                     double min_dist=15 ){
+// Creates the vector of grid points for d, with no more than min_dist between
+// them but clustered near the default boundaries
 
   int n = d.n_elem ;
       // Number of states
@@ -35,18 +38,39 @@ arma::vec d_grid_fn( arma::vec d, double x_sd, double x_sd_mult=1.1, int n_pts=7
       // Fill in the grid
   vec out_trim = out( find( out <= max(d) + 1 ) ) ;
       // Throw away points far above the maximum possible
-  return sort(out_trim) ;
+
+  vec extra = regspace( min_dist, min_dist, max(out_trim) ) ;
+      // Extra points, at least min_dist apart
+  uvec keep_extra(extra.n_elem) ;
+      // Initiate the vector of ones to keep
+  for( int i = 0 ; i < extra.n_elem ; i++ ){
+    double dd = min( abs(out_trim - extra(i) ) );
+        // Rcout << "dd = " << dd << std::endl ;
+    keep_extra(i) = ( dd <= min_dist / 2 ) ? 0 : 1 ;
+        // Keep only those that are not too close
+  }
+
+      Rcout << "keep_extra:\n" << keep_extra << std::endl ;
+
+  vec out_final = join_vert( out_trim, extra( find(keep_extra) ) ) ;
+      // The last edit!
+  return sort(out_final) ;
 }
 
 // [[Rcpp::export]]
-arma::vec e_grid_fn( double x_sd, int n_pts=7 ){
+arma::vec e_grid_fn( double x_sd, int n_pts=7, bool d_tri=false ){
 // Vector of points for surplus shock
   vec out = zeros(n_pts) ;
       // Initialize output
   for( int i = 0 ; i < n_pts ; i++ ){
     double q = ( i + .5 ) / n_pts ;
-    out(i) = R::qnorm5( q, 0, x_sd, 1, 0 ) ;
-    // The distance to spread out around the default boundaries
+    if( d_tri ){
+      double ub = x_sd * std::sqrt( 6.0 ) ;
+      out(i) = q_triangle( q, -ub, 0, ub ) ;
+    }else{
+      out(i) = R::qnorm5( q, 0, x_sd, 1, 0 ) ;
+    }
+        // The distance to spread out around the default boundaries
   }
   return out ;
 }

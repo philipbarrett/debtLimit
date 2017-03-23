@@ -52,3 +52,16 @@ double d_triangle2( double x, double a, double b, double c ){
   if( x >= 0 )
     return - 1 / ( c - b ) * z ;
 }
+
+// [[Rcpp::export]]
+double q_triangle( double q, double a, double b, double c ){
+// Triangle distribution inversion
+  if( q <= ( b - a ) / ( c - a ) ){
+    double disc = q * ( b - a ) * ( c - a )  ;
+      // The discriminant
+      // Because x^2 - 2ay + C = 0, where C = a^2 - disc
+    return a + pow( disc, .5 ) ;
+  }
+  return( c - q_triangle( 1 - q, 0, c - b, c - a ) ) ;
+      // If q is below the mode then call recursively
+}

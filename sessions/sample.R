@@ -135,7 +135,7 @@ plot.z( sol$p, sol$d, params )
 plot.z( sol.w$p, sol.w$d, params )
 
 params$d.tri <- TRUE
-sol.t <- sol.wrapper( params, init.guess = cbind(sol.w$p, sol.w$d) )
+sol.t <- sol.wrapper( params ) #, init.guess = cbind(sol.w$p, sol.w$d) )
 plot.z( sol.t$p, sol.t$d, params )
 params$d.tri <- FALSE
 

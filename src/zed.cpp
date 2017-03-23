@@ -18,7 +18,13 @@
 // [[Rcpp::export]]
 arma::vec zed( arma::vec p, arma::vec d, List params, arma::vec An,
                arma::vec Cn, arma::mat def ) {
-// Computes zed
+// Computes zed when d'=d
+  return zed_d( p, d, d, params, An, Cn, def ) ;
+}
+
+// [[Rcpp::export]]
+arma::vec zed_d( arma::vec p, arma::vec d, arma::vec dprime, List params, arma::vec An,
+               arma::vec Cn, arma::mat def ) {
 
   /** 1. Extract parameters **/
   mat trans = params["trans"] ;
@@ -50,7 +56,7 @@ arma::vec zed( arma::vec p, arma::vec d, List params, arma::vec An,
   for( int i = 0 ; i < n ; i++ ){
     for( int j = 0 ; j < n ; j++ ){
       H(i,j) = d(i) * ( ( 1 - lambda ) + lambda * qprime(j) ) / ( q(i) * G(j) ) -
-                    d(j) - surp(i) ;
+                    dprime(j) - surp(i) ;
           // Market value of new debt in next period is # of old obligations *
           // current market price.
       if( d_tri ){
