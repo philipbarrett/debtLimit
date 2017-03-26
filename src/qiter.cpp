@@ -81,7 +81,7 @@ arma::mat d_prime( int i_x, double d, arma::vec d_bar, double qhat, arma::mat Q,
       diff = max( abs( this_dprime.elem(loc_sol) - this_dprime_old.elem(loc_sol) ) ) ;
       this_dprime_old = this_dprime ;
           // Update iteration
-      if( print_level > 0 ){
+      if( print_level > 1 ){
         Rcout << "  it = " << it << std::endl ;
         Rcout << "  diff = " << diff << std::endl ;
       }
@@ -91,6 +91,7 @@ arma::mat d_prime( int i_x, double d, arma::vec d_bar, double qhat, arma::mat Q,
     }
     dprime.col(i) = this_dprime ;
   }
+
   return dprime ;
 }
 
@@ -109,6 +110,9 @@ arma::vec q_e( double d, arma::vec d_bar, arma::vec qhat, arma::mat Q,
   vec out = zeros(n) ;
       // Initialize output
   mat temp_dprime = zeros(m,n) ;
+  umat temp_II = zeros<umat>(m,n) ;
+  mat temp_II_density = zeros(m,n) ;
+      // Temporary containers for dprime and the indicator for conditional default
   vec temp_qprime = zeros(m) ;
   mat m_qprime = zeros(m,n) ;
       // Initialize dprime and qprime
@@ -122,8 +126,21 @@ arma::vec q_e( double d, arma::vec d_bar, arma::vec qhat, arma::mat Q,
     for( int j = 0 ; j < n ; j++ ){
       interp1( d_grid, Q_t.col(j), temp_dprime.col(j), temp_qprime, "linear", 1 ) ;
       m_qprime.col(j) = temp_qprime ;
+          // Interpolate and store the price
+      temp_II.col(j) = ( temp_dprime.col(j) <= d_bar(j) ) ;
+          // Record if there is no conditional default
+      temp_II_density.col(j) = conv_to<vec>::from(temp_II.col(j)) ;
+      temp_II_density.col(j) = temp_II_density.col(j) *
+              ( (sum(temp_II_density.col(j)) > 0) ? (1 / sum(temp_II_density.col(j))) : 0 ) ;
+          // Create the density if the repayment probability is strictly positive
     }
-    out(i) = dot( trans.row(i), ones<rowvec>(m) * m_qprime / m ) ;
+    out(i) = dot( trans.row(i), ones<rowvec>(m) * ( m_qprime % temp_II_density ) ) ;
+        // Create the expected value conditional on repayment
+    if( print_level > 0 ){
+      Rcout << "temp_II:\n" << temp_II << std::endl ;
+      Rcout << "temp_II_density:\n" << temp_II_density << std::endl ;
+    }
+    // out(i) = dot( trans.row(i), ones<rowvec>(m) * m_qprime / m ) ;
   }
   return out ;
 }
@@ -168,6 +185,8 @@ arma::vec q_hat_fn( double d, arma::vec p, arma::vec d_bar, arma::vec qhat, arma
   return q ;
 }
 
+
+
 // [[Rcpp::export]]
 arma::mat q_hat_mat( arma::mat P, arma::vec d_bar, arma::mat QHat, arma::mat Q,
                     arma::vec d_grid, arma::vec R, arma::vec G, double lambda, double phi, arma::vec e_grid,
@@ -191,3 +210,67 @@ arma::mat q_hat_mat( arma::mat P, arma::vec d_bar, arma::mat QHat, arma::mat Q,
   }
   return out ;
 }
+
+
+// [[Rcpp::export]]
+arma::mat d_prime_mat( arma::vec d_bar, arma::mat QHat, arma::mat Q,
+                       arma::vec d_grid, arma::vec G, double lambda, arma::vec e_grid,
+                       arma::mat trans, arma::vec coeff, bool tri,
+                       arma::mat D_prime_0, bool D_prime_0_flag, int print_level=1,
+                       double tol=1e-05, int maxit=20 ){
+// Computes a matrix of average continuation debt levels.
+
+  mat out = zeros(size(Q)) ;
+      // Initialize output
+  int m = d_grid.n_elem ;
+  int n = d_bar.n_elem ;
+      // Number of states and debt levels
+  for( int i=0 ; i < n ; i++ ){
+    for( int j=0 ; j < m ; j++ ){
+      out(i,j) = dot( trans.row(i),
+          mean( d_prime( i, d_grid(j), d_bar, QHat(i,j), Q, d_grid, G, lambda, e_grid,
+                      coeff, tri, D_prime_0, D_prime_0_flag, print_level-1, tol, maxit ),
+                      0 ) ) ;
+            // mean(.,0) takes the column mean (i.e. the mean across e_grid with
+            // equiprobable nodes), and then do sumprod with appropriate
+            // transition probabilities
+    }
+  }
+  return out ;
+}
+
+// [[Rcpp::export]]
+arma::mat qe_mat( arma::vec d_bar, arma::mat QHat, arma::mat Q,
+                       arma::vec d_grid, arma::vec G, double lambda, arma::vec e_grid,
+                       arma::mat trans, arma::vec coeff, bool tri,
+                       arma::mat D_prime_0, bool D_prime_0_flag, int print_level=0,
+                       double tol=1e-05, int maxit=20 ){
+// Creates a matrix of expected continuation debt values
+
+  mat out = zeros(size(Q)) ;
+      // Initialize output
+  int m = d_grid.n_elem ;
+      // Number of debt levels
+  for( int i = 0 ; i < m ; i++ ){
+    if( print_level > 0 ){
+      Rcout << "\nDebt grid point # " << i << std::endl ;
+    }
+    out.col(i) =  q_e( d_grid(i), d_bar, QHat.col(i), Q, d_grid, G,
+            lambda, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, trans,
+            print_level - 1, tol, maxit ) ;
+  }
+  return out ;
+}
+
+// arma::vec q_e( double d, arma::vec d_bar, arma::vec qhat, arma::mat Q,
+//                arma::vec d_grid, arma::vec G, double lambda, arma::vec e_grid,
+//                arma::vec coeff, bool tri, arma::mat D_prime_0, bool D_prime_0_flag,
+//                arma::mat trans, int print_level, double tol, int maxit )
+
+
+
+
+
+
+
+

@@ -15,7 +15,7 @@ arma::vec q_fn( arma::vec R, arma::vec p, arma::mat trans, double lambda, double
                 int n,  std::string cont_type, arma::vec G, arma::vec An,
                 arma::mat def ){
 // The bond price function, computed from the equation:
-//    Rq = (1-lambda)*phi*p*q + (1-p)*(1-lambda) + lambda*qe
+//    Rq = (1-lambda)*phi*p*q + (1-p)*(1-lambda + lambda*qe)
 //
 // cont_type defines the expected continuation price qe.  Can be:
 //  - "avg" the continuation price is the conditional average of the other
@@ -47,7 +47,7 @@ arma::vec q_fn( arma::vec R, arma::vec p, arma::mat trans, double lambda, double
 
   }else if( cont_type == "fix" ){
     // The continuation price is known and given by An
-    q = ( ( 1 - lambda ) * ( 1 - p ) + lambda * An ) / ( R - ( 1 - lambda ) * phi * p ) ;
+    q = ( 1 - p ) % ( ( 1 - lambda ) + lambda * An ) / ( R - ( 1 - lambda ) * phi * p ) ;
 
   }else{
     // Average over selected default thresholds based on R-G
@@ -120,7 +120,7 @@ arma::mat q_d_p( arma::vec R, arma::vec p, arma::mat trans, double lambda, doubl
       // Rcout << "p:\n" << p << std::endl ;
       // Rcout << "Bn:\n" << Bn << std::endl ;
       // Rcout << "R:\n" << R << std::endl ;
-    dq = diagmat( ( ( 1 - lambda ) * ( - 1 + phi * q ) +
+    dq = diagmat( ( ( 1 - lambda ) * ( - 1 + phi * q ) - lambda * An +
                       ( 1 - p ) * lambda % Bn ) / ( R - ( 1 - lambda ) * phi * p ) ) ;
         // The derivative
   }

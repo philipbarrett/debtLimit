@@ -49,9 +49,7 @@ arma::vec d_grid_fn( arma::vec d, double x_sd, double x_sd_mult=1.5, int n_pts=1
     keep_extra(i) = ( dd <= min_dist / 2 ) ? 0 : 1 ;
         // Keep only those that are not too close
   }
-
-      Rcout << "keep_extra:\n" << keep_extra << std::endl ;
-
+      // Rcout << "keep_extra:\n" << keep_extra << std::endl ;
   vec out_final = join_vert( out_trim, extra( find(keep_extra) ) ) ;
       // The last edit!
   return sort(out_final) ;

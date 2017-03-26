@@ -49,6 +49,14 @@ q_hat_mat <- function(P, d_bar, QHat, Q, d_grid, R, G, lambda, phi, e_grid, coef
     .Call('debtLimits_q_hat_mat', PACKAGE = 'debtLimits', P, d_bar, QHat, Q, d_grid, R, G, lambda, phi, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, trans, print_level, tol, maxit, d_tol, d_maxit)
 }
 
+d_prime_mat <- function(d_bar, QHat, Q, d_grid, G, lambda, e_grid, trans, coeff, tri, D_prime_0, D_prime_0_flag, print_level = 1L, tol = 1e-05, maxit = 20L) {
+    .Call('debtLimits_d_prime_mat', PACKAGE = 'debtLimits', d_bar, QHat, Q, d_grid, G, lambda, e_grid, trans, coeff, tri, D_prime_0, D_prime_0_flag, print_level, tol, maxit)
+}
+
+qe_mat <- function(d_bar, QHat, Q, d_grid, G, lambda, e_grid, trans, coeff, tri, D_prime_0, D_prime_0_flag, print_level = 0L, tol = 1e-05, maxit = 20L) {
+    .Call('debtLimits_qe_mat', PACKAGE = 'debtLimits', d_bar, QHat, Q, d_grid, G, lambda, e_grid, trans, coeff, tri, D_prime_0, D_prime_0_flag, print_level, tol, maxit)
+}
+
 v_surp <- function(d, coeff, G, tri) {
     .Call('debtLimits_v_surp', PACKAGE = 'debtLimits', d, coeff, G, tri)
 }
