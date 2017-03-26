@@ -43,5 +43,10 @@ arma::mat d_prime_mat( arma::vec d_bar, arma::mat QHat, arma::mat Q,
                        arma::mat trans, arma::vec coeff, bool tri,
                        arma::mat D_prime_0, bool D_prime_0_flag, int print_level,
                        double tol, int maxit ) ;
+arma::mat qe_mat( arma::vec d_bar, arma::mat QHat, arma::mat Q,
+                  arma::vec d_grid, arma::vec G, double lambda, arma::vec e_grid,
+                  arma::mat trans, arma::vec coeff, bool tri,
+                  arma::mat D_prime_0, bool D_prime_0_flag, int print_level,
+                  double tol, int maxit ) ;
 
 #endif

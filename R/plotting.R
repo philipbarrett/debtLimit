@@ -154,3 +154,47 @@ plot.q.i <- function( p, params, i, An=NULL, def=NULL ){
   abline( v = p[i], lty=2, lwd=1 )
   legend( 'topright', paste0( 'R=', params$R[i]-1, '\nG=', params$G[i]-1), bty='n' )
 }
+
+
+plot.sol <- function( sol ){
+# Plots the outer solution
+
+  par(mfrow=c(2,2))
+      # Multiple plots
+  n <- length(params$R)
+
+  # Plot Q
+  plot( range(sol$d.grid), range(sol$Q), type='n', xlab='Debt value', ylab='',
+        main='Debt price' )
+  abline(v=sol$d.bar, lty=2, col=1:n )
+  abline(v=sol$d.grid, lty=1, lwd=.25 )
+  abline(h=c(0,1))
+  for( i in 1:n ) lines( sol$d.grid, sol$Q[i,], col=i, lwd=2 )
+
+  # Plot QE
+  plot( range(sol$d.grid), range(sol$QE), type='n', xlab='Debt value', ylab='',
+        main='Expected continuation debt price' )
+  abline(v=sol$d.bar, lty=2, col=1:n )
+  abline(v=sol$d.grid, lty=1, lwd=.25 )
+  abline(h=c(0,1))
+  for( i in 1:n ) lines( sol$d.grid, sol$QE[i,], col=i, lwd=2 )
+
+  # Plot P
+  plot( range(sol$d.grid), range(sol$P), type='n', xlab='Debt value', ylab='',
+        main='Default probability' )
+  abline(v=sol$d.bar, lty=2, col=1:n )
+  abline(v=sol$d.grid, lty=1, lwd=.25 )
+  abline(h=c(0,1))
+  for( i in 1:n ) lines( sol$d.grid, sol$P[i,], col=i, lwd=2 )
+
+  # Plot D.prime
+  plot( range(sol$d.grid), range(sol$D.prime), type='n', xlab='Debt value', ylab='',
+        main='Expected continuation debt' )
+  abline(v=sol$d.bar, lty=2, col=1:n )
+  abline(h=sol$d.bar, lty=2, col=1:n )
+  abline(v=sol$d.grid, lty=1, lwd=.25 )
+  abline(0,1,lty=2)
+  for( i in 1:n ) lines( sol$d.grid, sol$D.prime[i,], col=i, lwd=2 )
+
+  par(mfrow=c(1,1))
+}

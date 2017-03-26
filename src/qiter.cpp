@@ -218,7 +218,7 @@ arma::mat d_prime_mat( arma::vec d_bar, arma::mat QHat, arma::mat Q,
                        arma::mat trans, arma::vec coeff, bool tri,
                        arma::mat D_prime_0, bool D_prime_0_flag, int print_level=1,
                        double tol=1e-05, int maxit=20 ){
-// Computes a matrix of average continuation debt levels.
+// Computes a matrix of *average* continuation debt levels.
 
   mat out = zeros(size(Q)) ;
       // Initialize output

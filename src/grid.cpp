@@ -36,7 +36,7 @@ arma::vec d_grid_fn( arma::vec d, double x_sd, double x_sd_mult=1.5, int n_pts=1
     out.subvec(i*(n_pts+1)+1,(i+1)*(n_pts+1)) = d(i) + spread ;
   }
       // Fill in the grid
-  vec out_trim = out( find( out <= max(d) + 1 ) ) ;
+  vec out_trim = out( find( out <= max(d) + 10 ) ) ;
       // Throw away points far above the maximum possible
 
   vec extra = regspace( min_dist, min_dist, max(out_trim) ) ;

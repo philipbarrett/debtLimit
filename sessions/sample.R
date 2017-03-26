@@ -149,6 +149,7 @@ plot.z( sol.l$p, sol.l$d, params )
 
 params$cont.type <- 'fix'
 params$lambda <- .2
+params$it <- 1
 sol.f <- sol.wrapper( params, An=An, Bn=Bn, Cn=Cn )
 plot.z( sol.f$p, sol.f$d, params, An, Bn, Cn )
 
