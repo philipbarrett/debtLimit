@@ -117,7 +117,7 @@ zed_2_ana <- function(p, d, params, An, Bn, Cn, def) {
     .Call('debtLimits_zed_2_ana', PACKAGE = 'debtLimits', p, d, params, An, Bn, Cn, def)
 }
 
-ziter <- function(P, d_bar, QHat, Q, d_grid, e_grid, tri, D_prime_0, D_prime_0_flag, params, An, Cn, print_level = 0L, tol = 1e-04, maxit = 100L, q_tol = 1e-04, q_maxit = 50L, d_tol = 1e-05, d_maxit = 20L) {
-    .Call('debtLimits_ziter', PACKAGE = 'debtLimits', P, d_bar, QHat, Q, d_grid, e_grid, tri, D_prime_0, D_prime_0_flag, params, An, Cn, print_level, tol, maxit, q_tol, q_maxit, d_tol, d_maxit)
+ziter <- function(P, d_bar, QHat, d_grid, e_grid, tri, D_prime_0, D_prime_0_flag, params, An, Cn, print_level = 0L, tol = 1e-04, maxit = 100L, q_tol = 1e-04, q_maxit = 50L, d_tol = 1e-05, d_maxit = 20L, Q_out = FALSE) {
+    .Call('debtLimits_ziter', PACKAGE = 'debtLimits', P, d_bar, QHat, d_grid, e_grid, tri, D_prime_0, D_prime_0_flag, params, An, Cn, print_level, tol, maxit, q_tol, q_maxit, d_tol, d_maxit, Q_out)
 }
 

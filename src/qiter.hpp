@@ -48,5 +48,4 @@ arma::mat qe_mat( arma::vec d_bar, arma::mat QHat, arma::mat Q,
                   arma::mat trans, arma::vec coeff, bool tri,
                   arma::mat D_prime_0, bool D_prime_0_flag, int print_level,
                   double tol, int maxit ) ;
-
 #endif

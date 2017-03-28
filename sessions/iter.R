@@ -73,8 +73,9 @@ microbenchmark(QQ <-
 sol.o <- outer.wrapper( d.grid, e.grid, sol.w$d, params, An, Bn, Cn )
 plot.sol((sol.o))
 
+err.o <- outer.err(sol.o, params, An, Cn )
 
 ## TODO:
-## ALSO ERROR CHECKS
+## CHECK SOLUTION HOLDS WHEN LAMBDA = 0
 ## THEN EXTRACT AN, BN, CN
 ## LOOP

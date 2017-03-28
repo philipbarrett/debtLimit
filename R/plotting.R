@@ -198,3 +198,21 @@ plot.sol <- function( sol ){
 
   par(mfrow=c(1,1))
 }
+
+plot.err <- function(sol.err){
+# Plots the errors from a solution
+  par(mfrow=c(2,2))
+  plot.err.i( sol.err$P, main='Default probability' )
+  plot.err.i( sol.err$Q, main='Debt price' )
+  plot.err.i( sol.err$D.prime, main='Ave. continuation debt' )
+  tb <- sapply( c('P','Q','D.prime'), function(x) c('Ave err'=mean(sol.err[[x]]),
+                                        'Ave abs err'=mean(abs(sol.err[[x]])) ) )
+  par(mfrow=c(1,1))
+  return(tb)
+}
+
+plot.err.i <- function(err, ... ){
+# Plots an inidividual error distribution
+  plot( density( abs(c(err)), from=0 ), xlab='Absolute error', ylab='Density', lwd=2, ... )
+  abline( v = quantile( abs(c(err)), c(.5, .75, .9, .95, .99)), lty=2 )
+}

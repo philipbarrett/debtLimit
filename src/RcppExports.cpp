@@ -532,15 +532,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // ziter
-arma::mat ziter(arma::mat P, arma::vec d_bar, arma::mat QHat, arma::mat Q, arma::vec d_grid, arma::vec e_grid, bool tri, arma::mat D_prime_0, bool D_prime_0_flag, List params, arma::vec An, arma::vec Cn, int print_level, double tol, int maxit, double q_tol, int q_maxit, double d_tol, int d_maxit);
-RcppExport SEXP debtLimits_ziter(SEXP PSEXP, SEXP d_barSEXP, SEXP QHatSEXP, SEXP QSEXP, SEXP d_gridSEXP, SEXP e_gridSEXP, SEXP triSEXP, SEXP D_prime_0SEXP, SEXP D_prime_0_flagSEXP, SEXP paramsSEXP, SEXP AnSEXP, SEXP CnSEXP, SEXP print_levelSEXP, SEXP tolSEXP, SEXP maxitSEXP, SEXP q_tolSEXP, SEXP q_maxitSEXP, SEXP d_tolSEXP, SEXP d_maxitSEXP) {
+arma::mat ziter(arma::mat P, arma::vec d_bar, arma::mat QHat, arma::vec d_grid, arma::vec e_grid, bool tri, arma::mat D_prime_0, bool D_prime_0_flag, List params, arma::vec An, arma::vec Cn, int print_level, double tol, int maxit, double q_tol, int q_maxit, double d_tol, int d_maxit, bool Q_out);
+RcppExport SEXP debtLimits_ziter(SEXP PSEXP, SEXP d_barSEXP, SEXP QHatSEXP, SEXP d_gridSEXP, SEXP e_gridSEXP, SEXP triSEXP, SEXP D_prime_0SEXP, SEXP D_prime_0_flagSEXP, SEXP paramsSEXP, SEXP AnSEXP, SEXP CnSEXP, SEXP print_levelSEXP, SEXP tolSEXP, SEXP maxitSEXP, SEXP q_tolSEXP, SEXP q_maxitSEXP, SEXP d_tolSEXP, SEXP d_maxitSEXP, SEXP Q_outSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type P(PSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type d_bar(d_barSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type QHat(QHatSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Q(QSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type d_grid(d_gridSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type e_grid(e_gridSEXP);
     Rcpp::traits::input_parameter< bool >::type tri(triSEXP);
@@ -556,7 +555,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type q_maxit(q_maxitSEXP);
     Rcpp::traits::input_parameter< double >::type d_tol(d_tolSEXP);
     Rcpp::traits::input_parameter< int >::type d_maxit(d_maxitSEXP);
-    rcpp_result_gen = Rcpp::wrap(ziter(P, d_bar, QHat, Q, d_grid, e_grid, tri, D_prime_0, D_prime_0_flag, params, An, Cn, print_level, tol, maxit, q_tol, q_maxit, d_tol, d_maxit));
+    Rcpp::traits::input_parameter< bool >::type Q_out(Q_outSEXP);
+    rcpp_result_gen = Rcpp::wrap(ziter(P, d_bar, QHat, d_grid, e_grid, tri, D_prime_0, D_prime_0_flag, params, An, Cn, print_level, tol, maxit, q_tol, q_maxit, d_tol, d_maxit, Q_out));
     return rcpp_result_gen;
 END_RCPP
 }
