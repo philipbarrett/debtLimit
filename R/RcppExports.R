@@ -17,8 +17,20 @@ p_init_d_i <- function(params, p, d, An, Bn, Cn, def, i) {
     .Call('debtLimits_p_init_d_i', PACKAGE = 'debtLimits', params, p, d, An, Bn, Cn, def, i)
 }
 
+p_fp <- function(params, p, d, An, Bn, Cn, def, maxit = 200L, tol = 1e-06) {
+    .Call('debtLimits_p_fp', PACKAGE = 'debtLimits', params, p, d, An, Bn, Cn, def, maxit, tol)
+}
+
+d_init_p_i <- function(params, p, d, An, Bn, Cn, def, i, d_max, d_min = 0, maxit = 100L, print_level = 0L, max_outer = 10L, i_outer = 0L, d_step_0 = -10) {
+    .Call('debtLimits_d_init_p_i', PACKAGE = 'debtLimits', params, p, d, An, Bn, Cn, def, i, d_max, d_min, maxit, print_level, max_outer, i_outer, d_step_0)
+}
+
 p_init_d <- function(params, p, d, An, Bn, Cn, def) {
     .Call('debtLimits_p_init_d', PACKAGE = 'debtLimits', params, p, d, An, Bn, Cn, def)
+}
+
+d_init_p <- function(params, p, d, An, Bn, Cn, def, d_max, maxit = 100L, print_level = 0L, max_outer = 10L) {
+    .Call('debtLimits_d_init_p', PACKAGE = 'debtLimits', params, p, d, An, Bn, Cn, def, d_max, maxit, print_level, max_outer)
 }
 
 q_fn <- function(R, p, trans, lambda, phi, n, cont_type, G, An, def) {
@@ -93,12 +105,12 @@ q_triangle <- function(q, a, b, c) {
     .Call('debtLimits_q_triangle', PACKAGE = 'debtLimits', q, a, b, c)
 }
 
-zed <- function(p, d, params, An, Cn, def) {
-    .Call('debtLimits_zed', PACKAGE = 'debtLimits', p, d, params, An, Cn, def)
+zed <- function(p, d, params, An, Cn, def, print_level) {
+    .Call('debtLimits_zed', PACKAGE = 'debtLimits', p, d, params, An, Cn, def, print_level)
 }
 
-zed_d <- function(p, d, dprime, params, An, Cn, def) {
-    .Call('debtLimits_zed_d', PACKAGE = 'debtLimits', p, d, dprime, params, An, Cn, def)
+zed_d <- function(p, d, dprime, params, An, Cn, def, print_level) {
+    .Call('debtLimits_zed_d', PACKAGE = 'debtLimits', p, d, dprime, params, An, Cn, def, print_level)
 }
 
 zed_2 <- function(p, d, params, An, Bn, Cn, def) {

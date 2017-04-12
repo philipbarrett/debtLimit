@@ -152,7 +152,7 @@ arma::vec q_hat_fn( double d, arma::vec p, arma::vec d_bar, arma::vec qhat, arma
                bool D_prime_0_flag,arma::mat trans, int print_level=1, double tol=1e-05,
                int maxit=50, double d_tol=1e-05, int d_maxit=20 ){
 // Inner iterator to find the vector of q over x given debt d and next-period
-// default probability p
+// default probability vector p
 
   int n = p.n_elem ;
       // Number of states

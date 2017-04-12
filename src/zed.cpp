@@ -13,18 +13,16 @@
 #include "q.hpp"
 #include "tri.hpp"
 
-/** NEED TO CHANGE ALL THE qe AND q to An, Bn, ALSO THINK ABOUT Cn **/
-
 // [[Rcpp::export]]
 arma::vec zed( arma::vec p, arma::vec d, List params, arma::vec An,
-               arma::vec Cn, arma::mat def ) {
+               arma::vec Cn, arma::mat def, int print_level ) {
 // Computes zed when d'=d
-  return zed_d( p, d, d, params, An, Cn, def ) ;
+  return zed_d( p, d, d, params, An, Cn, def, print_level ) ;
 }
 
 // [[Rcpp::export]]
 arma::vec zed_d( arma::vec p, arma::vec d, arma::vec dprime, List params, arma::vec An,
-               arma::vec Cn, arma::mat def ) {
+               arma::vec Cn, arma::mat def, int print_level ) {
 
   /** 1. Extract parameters **/
   mat trans = params["trans"] ;
@@ -46,17 +44,19 @@ arma::vec zed_d( arma::vec p, arma::vec d, arma::vec dprime, List params, arma::
       // The price of the continuation debt.
 
   /** 3. Create threshold values for the surplus shock **/
-  vec surp = v_surp( d, v_s_coeff, G, tri ) ;
-      // The surplus vector.  Depends on growth and debt in the *preceding* period.
+  vec surp = ones(n) ;
+      // The surplus vector.  Depends on debt in the preceding period and grwoth in this.
   mat H = mat(n,n) ;
   mat p_H = mat(n,n) ;
       // The matrix H of surplus shocks required to hit the debt limit and their
       // corresponding probabilities
 
   for( int i = 0 ; i < n ; i++ ){
+    surp = v_surp( d(i) * ones(n), v_s_coeff, G, tri ) ;
+        // The surplus vector
     for( int j = 0 ; j < n ; j++ ){
       H(i,j) = d(i) * ( ( 1 - lambda ) + lambda * qprime(j) ) / ( q(i) * G(j) ) -
-                    dprime(j) - surp(i) ;
+                    dprime(j) - surp(j) ;
           // Market value of new debt in next period is # of old obligations *
           // current market price.
       if( d_tri ){
@@ -76,6 +76,26 @@ arma::vec zed_d( arma::vec p, arma::vec d, arma::vec dprime, List params, arma::
     z(i) = dot( trans.row(i), p_H.row(i) ) ;
   }
       // Create the output as the expectation of the default probabilities over the states.
+
+  if( print_level > 0 ){
+    Rcout << std::setw(3) << "i" << std::setw(3) << "j"
+          << std::setw(5) << "p" << std::setw(8) << "d"
+          << std::setw(10) << "q" << std::setw(10) << "q_prime"
+          << std::setw(8) << "R" << std::setw(8) << "G" << std::setw(10) << "Old debt"
+          << std::setw(10) << "d_prime" << std::setw(10) << "surp"
+          << std::setw(10) << "H" << std::setw(10) << "p_H" << std::endl ;
+    for( int i = 0 ; i < n ; i++ ){
+      for( int j = 0 ; j < n ; j++ ){
+        double old_debt = d(i) * ( ( 1 - lambda ) + lambda * qprime(j) ) / ( q(i) * G(j) ) ;
+        Rcout << std::setw(3) << i << std::setw(3) << j
+              << std::setprecision(4) << std::setw(5) << p(i) << std::setw(8) << d(i)
+              << std::setw(10) << q(i) << std::setw(10) << qprime(j)
+              << std::setw(8) << R(i) << std::setw(8) << G(j) << std::setw(10) << old_debt
+              << std::setw(10) << dprime(j) << std::setw(10) << surp(j)
+              << std::setw(10) << H(i,j) << std::setw(10) << p_H(i,j) << std::endl ;
+      }
+    }
+  }
   return z ;
 }
 
@@ -159,8 +179,8 @@ arma::mat zed_2_ana( arma::vec p, arma::vec d, List params, arma::vec An,
       // Next period debt price
 
   /** 3. Create threshold values for the surplus shock **/
-  vec surp = v_surp( d, v_s_coeff, G, tri ) ;
-      // The surplus vector.  Depends on growth and debt in the *preceding* period.
+  vec surp = ones(n) ;
+      // The surplus vector.  Depends on debt in the preceding period, but growth in this.
   mat H = zeros(n,n) ;
   mat p_H = zeros(n,n) ;
   mat p_H_dp = zeros(n,n) ;
@@ -169,9 +189,11 @@ arma::mat zed_2_ana( arma::vec p, arma::vec d, List params, arma::vec An,
       // corresponding probabilities, and the derivatives w.r.t. p
 
   for( int i = 0 ; i < n ; i++ ){
+    surp = v_surp( d(i) * ones(n), v_s_coeff, G, tri ) ;
+        // The surplus vector
     for( int j = 0 ; j < n ; j++ ){
       H(i,j) = d(i) * ( ( 1 - lambda ) + lambda * qprime(j) ) / ( q(i) * G(j) ) -
-        d(j) - surp(i) ;
+        d(j) - surp(j) ;
           // Market value of new debt in next period is # of old obligations *
           // current market price.
       if( cont_type == "fix" ){

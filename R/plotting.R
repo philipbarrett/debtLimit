@@ -14,7 +14,9 @@ plot.surp <- function(params, non.stoch=TRUE, x.lim=c(0,200), ... ){
     sapply(d, surp, coeff=params$v.s.coeff, G=G, tri=params$tri) )
       # Y-values
   y.max <- max(surps)
-  y.min <- if( min(surps) < 0 ) ( if( params$tri ) min(surps) else -.25 * y.max ) else 0
+  d.max <- d[which.max(if(is.null(dim(surps))) surps else surps[,1])]
+  if(d.max==0) d.max <- x.lim[2]
+  y.min <- if( min(surps) < 0 ) ( if( params$tri ) min(surps) else min(surps[d<d.max]) ) else 0
   y.lim <- c(y.min,y.max)
       # Y range
   plot( x.lim, y.lim, type='n', xlab='Debt', ylab='Surplus', ...  )
@@ -25,11 +27,11 @@ plot.surp <- function(params, non.stoch=TRUE, x.lim=c(0,200), ... ){
   legend( 'topright', paste0( 'G = ', round( params$G, 3 ) ), lwd=2, col=1:i, bty='n' )
   abline(h=0)
   if( non.stoch ){
-    abline( v=sol.nonstoch(params), lwd=.5 )
+    abline( v=sol.nonstoch(params), lwd=.5, col=1:length(params$R) )
   }
 }
 
-plot.z <- function( p, d, params, An=c(0), Bn=c(0), Cn=c(0), def=matrix(0) ){
+plot.z <- function( p, d, params, An=c(0), Bn=c(0), Cn=c(0), def=matrix(0), ... ){
 # Plots the zed function for all the values of i
   n <- length(params$R)
   n.x <- ceiling( sqrt(n) )
@@ -37,13 +39,13 @@ plot.z <- function( p, d, params, An=c(0), Bn=c(0), Cn=c(0), def=matrix(0) ){
   par(mfrow=c(n.y,n.x))
   global.apx <- p_init_d( params, p, d, An, Bn, Cn, def )
   for( i in 1:n )
-    plot.z.i( p, d, params, i, An, Bn, Cn, def, global.apx[i] )
+    plot.z.i( p, d, params, i, An, Bn, Cn, def, global.apx[i], ... )
   par(mfrow=c(1,1))
 }
 
-plot.z.i <- function( p, d, params, i, An, Bn, Cn, def, global=NULL ){
+plot.z.i <- function( p, d, params, i, An, Bn, Cn, def, global, ... ){
 # Plots the z function vs. p[i] in state i
-  p.seq <- seq(0,1,by=.001)
+  p.seq <- c( seq(0,1e-3,by=1e-5), seq(1e-3,1e-2,by=1e-4), seq(1e-2,1e-1,by=1e-3), seq(1e-1,1,by=1e-2) )
       # The x-values
   y.vals <- t( sapply( p.seq, function(p.i){
     this.p <- p
@@ -51,7 +53,8 @@ plot.z.i <- function( p, d, params, i, An, Bn, Cn, def, global=NULL ){
     return( zed_2(this.p, d, params, An, Bn, Cn, def )[i,] )
   } ) )
       # The y values
-  plot( p.seq, y.vals[,1], lwd=2, xlab='p', ylab='z', main=paste0( 'i = ', i ), type='l', ylim=c(0,1) )
+  # if( !exists('ylim')) ylim <- c(0,1)
+  plot( p.seq, y.vals[,1], lwd=2, xlab='p', ylab='z', main=paste0( 'i = ', i ), type='l', ... )
   abline( 0, 1, lty=2 )
   abline( v=p[i], lty=2 )
   abline( h=p[i], lty=2 )
@@ -72,7 +75,7 @@ plot.z.i <- function( p, d, params, i, An, Bn, Cn, def, global=NULL ){
 }
 
 plot.z.d <- function( p, d, params, An=c(0), Bn=c(0), Cn=c(0), def=matrix(0),
-                    d.range=c(0,200) ){
+                    d.range=c(0,200), global=NULL, ... ){
 # Plots the zed function for all the values of i
   n <- length(params$R)
   n.x <- ceiling( sqrt(n) )
@@ -80,11 +83,11 @@ plot.z.d <- function( p, d, params, An=c(0), Bn=c(0), Cn=c(0), def=matrix(0),
   par(mfrow=c(n.y,n.x))
   # global.apx <- p_init_d( params, p, d, An, Bn, Cn, def )
   for( i in 1:n )
-    plot.z.d.i( p, d, params, i, An, Bn, Cn, def, d.range )
+    plot.z.d.i( p, d, params, i, An, Bn, Cn, def, d.range, global, ... )
   par(mfrow=c(1,1))
 }
 
-plot.z.d.i <- function( p, d, params, i, An, Bn, Cn, def, d.range=c(0,200), global=NULL ){
+plot.z.d.i <- function( p, d, params, i, An, Bn, Cn, def, d.range=c(0,200), global, ... ){
 # Plots the z function vs. d[i] in state i
   d.seq <- seq(d.range[1], d.range[2],length.out=1000)
       # The x-values
@@ -94,7 +97,7 @@ plot.z.d.i <- function( p, d, params, i, An, Bn, Cn, def, d.range=c(0,200), glob
     return( zed_2(p, this.d, params, An, Bn, Cn, def )[i,] )
   } ) )
   # The y values
-  plot( d.seq, y.vals[,1], lwd=2, xlab='p', ylab='z', main=paste0( 'i = ', i ), type='l', ylim=c(0,1) )
+  plot( d.seq, y.vals[,1], lwd=2, xlab='d', ylab='z', main=paste0( 'i = ', i ), type='l', ... )
   # abline( 0, 1, lty=2 )
   abline( v=d[i], lty=2 )
   abline( h=p[i], lty=2 )
@@ -166,7 +169,7 @@ plot.sol <- function( sol ){
   # Plot Q
   plot( range(sol$d.grid), range(sol$Q), type='n', xlab='Debt value', ylab='',
         main='Debt price' )
-  abline(v=sol$d.bar, lty=2, col=1:n )
+  abline(v=sol$d.bar, lty=2, lwd=2, col=1:n )
   abline(v=sol$d.grid, lty=1, lwd=.25 )
   abline(h=c(0,1))
   for( i in 1:n ) lines( sol$d.grid, sol$Q[i,], col=i, lwd=2 )
@@ -174,7 +177,7 @@ plot.sol <- function( sol ){
   # Plot QE
   plot( range(sol$d.grid), range(sol$QE), type='n', xlab='Debt value', ylab='',
         main='Expected continuation debt price' )
-  abline(v=sol$d.bar, lty=2, col=1:n )
+  abline(v=sol$d.bar, lty=2, lwd=2, col=1:n )
   abline(v=sol$d.grid, lty=1, lwd=.25 )
   abline(h=c(0,1))
   for( i in 1:n ) lines( sol$d.grid, sol$QE[i,], col=i, lwd=2 )
@@ -182,7 +185,7 @@ plot.sol <- function( sol ){
   # Plot P
   plot( range(sol$d.grid), range(sol$P), type='n', xlab='Debt value', ylab='',
         main='Default probability' )
-  abline(v=sol$d.bar, lty=2, col=1:n )
+  abline(v=sol$d.bar, lty=2, lwd=2, col=1:n )
   abline(v=sol$d.grid, lty=1, lwd=.25 )
   abline(h=c(0,1))
   for( i in 1:n ) lines( sol$d.grid, sol$P[i,], col=i, lwd=2 )
@@ -190,7 +193,7 @@ plot.sol <- function( sol ){
   # Plot D.prime
   plot( range(sol$d.grid), range(sol$D.prime), type='n', xlab='Debt value', ylab='',
         main='Expected continuation debt' )
-  abline(v=sol$d.bar, lty=2, col=1:n )
+  abline(v=sol$d.bar, lty=2, lwd=2, col=1:n )
   abline(h=sol$d.bar, lty=2, col=1:n )
   abline(v=sol$d.grid, lty=1, lwd=.25 )
   abline(0,1,lty=2)
@@ -207,6 +210,20 @@ plot.err <- function(sol.err){
   plot.err.i( sol.err$D.prime, main='Ave. continuation debt' )
   tb <- sapply( c('P','Q','D.prime'), function(x) c('Ave err'=mean(sol.err[[x]]),
                                         'Ave abs err'=mean(abs(sol.err[[x]])) ) )
+      # Table of ave and ave abs errors
+  d.bar.err <- sol.err$d.bar.range - sol.err$d.bar
+      # The errors
+  nn <- length(params$R)
+      # Number of states
+  plot( c(1,nn), range(d.bar.err), type='n', xlab='State #', ylab='Upper-lower bound range',
+        xaxt='n', main='Inner vs. outer bounds check')
+  axis(1,at=1:nn,labels=format(1:nn,digits = 1))
+  abline(h=0,lwd=.5)
+  segments(1:nn,d.bar.err[,1],1:nn,d.bar.err[,2])
+  epsilon <- 0.02
+  segments(1:nn-epsilon,d.bar.err[,1],1:nn+epsilon,d.bar.err[,1])
+  segments(1:nn-epsilon,d.bar.err[,2],1:nn+epsilon,d.bar.err[,2])
+      # The consistency check for debt limits
   par(mfrow=c(1,1))
   return(tb)
 }

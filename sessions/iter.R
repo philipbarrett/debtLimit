@@ -1,16 +1,16 @@
-## 1. Set up parameters ##
 library(microbenchmark)
+library(debtLimits)
+
+## 1. Set up parameters ##
 params <- list()
 # params$trans <- matrix( c(.8,.2,.2,.8), 2, 2 ) # matrix( c(.6,.4,.4,.6), 2, 2 )
 # params$R <- c( 1.03, 1.02 )
 # params$G <- c( 1.04, 1.01 )
 
-params$trans <- matrix( c(.6,.2,.1,.1,
-                          .2,.6,.1,.1,
-                          .4,.1,.4,.1,
-                          .1,.4,.1,.4), 4, 4, byrow = TRUE ) # matrix( c(.6,.4,.4,.6), 2, 2 )
-params$R <- c( 1.03, 1.02, 1.06, 1.02 )
-params$G <- c( 1.04, 1.01, 1.05, .99 )
+params$trans <- matrix( c(.9,.1,
+                          .1, .9), 2, 2, byrow = TRUE ) # matrix( c(.6,.4,.4,.6), 2, 2 )
+params$R <- c( 1.03, 1.02 ) #, 1.06, 1.02 )
+params$G <- c( 1.04, 1.01 )#, 1.05, .99 )
 
 params$tri <- FALSE
 # params$tri <- TRUE
@@ -18,21 +18,24 @@ params$v.s.coeff <- c( 10, -5, .75, .18, -.013, 2 )
 # params$v.s.coeff <- c( 10, -5, .75, .18, -.014, .0001, 2 )
 # params$v.s.coeff <- c( 50, 100, 150, -6, 1, 1 )
 params$surp.sd <- 2
-params$lambda <- .2 # 0 # .5
+params$lambda <- 0 # .2 # 0 # .5
 params$phi <- .6
 params$cont.type <- 'avg'
 params$q.e <- c(0)
 params$def <- matrix(0,1,1)
-params$diff.method <- "num"
-params$d.tri <- FALSE      # Triangular distribution for surplus shocks
+params$diff.method <- "ana"
+params$d.tri <- FALSE # TRUE #       # Triangular distribution for surplus shocks
+params$inner.method <- 'all'
 An <- 1 / params$R
 Bn <- rep( -1, length(params$R) )
 Cn <- An
 def <- matrix(0,1,1)
+nn <- length(params$R)
 
 ## 2. Create an approximate solution
+plot.surp(params)
 sol.w <- sol.wrapper( params )
-plot.z( sol.w$p, sol.w$d, params )
+plot.z( sol.w$p, sol.w$d, sol.w$params, xlim=c(0,2*max(sol.w$p)), ylim=c(0,2*max(sol.w$p)) )
 
 ## 3. Create solution grids ##
 e.grid <- e_grid_fn(params$surp.sd, 21, params$d.tri )
@@ -44,22 +47,24 @@ d_prime( 0, sol.w$d[1] - 10, sol.w$d, 1 / params$R[1], Q, d.grid, params$G, para
          e.grid, params$v.s.coeff, params$tri, matrix(0), FALSE, print_level=2 )
 microbenchmark( d.prime <- d_prime( 0, sol.w$d[1] - 10, sol.w$d, 1 / params$R[1], Q, d.grid, params$G, params$lambda,
                                     e.grid, params$v.s.coeff, params$tri, matrix(0), FALSE, print_level=0 ) )
-    # ~ 35ms
+    # ~ 25ms
 
 ## 5. Solve for expected continuation debt prices ##
 q.e <- q_e( d.grid[13], sol.w$d, 1 / params$R, Q, d.grid, params$G, params$lambda,
             e.grid, params$v.s.coeff, params$tri, matrix(0), FALSE, params$trans, print_level=1 )
 microbenchmark(q_e( sol.w$d[4] + 2, sol.w$d, 1 / params$R, Q, d.grid, params$G, params$lambda,
                    e.grid, params$v.s.coeff, params$tri, matrix(0), FALSE, params$trans, print_level=0 ))
+    # ~ 60ms
 
 ## 6. Solve for actual debt price ##
-qq <- q_hat_fn( d.grid[13], rep(.01,4), sol.w$d, 1 / params$R, Q, d.grid, params$R,
+
+qq <- q_hat_fn( d.grid[13], rep(.01,nn), sol.w$d, 1 / params$R, Q, d.grid, params$R,
                  params$G, params$lambda, params$phi, e.grid, params$v.s.coeff, params$tri,
                  matrix(0), FALSE, params$trans, print_level=1 )
-microbenchmark( qq <- q_hat_fn( d.grid[2], rep(.02,4), sol.w$d, 1 / params$R, Q, d.grid, params$R,
+microbenchmark( qq <- q_hat_fn( d.grid[2], rep(.02,nn), sol.w$d, 1 / params$R, Q, d.grid, params$R,
                  params$G, params$lambda, params$phi, e.grid, params$v.s.coeff, params$tri,
                  matrix(0), FALSE, params$trans, print_level=0 ) )
-    # ~290ms
+    # ~94ms
 QQ <- q_hat_mat( matrix(.01,dim(Q)[1],dim(Q)[2]), sol.w$d, Q, Q, d.grid, params$R,params$G, params$lambda,
                  params$phi, e.grid, params$v.s.coeff, params$tri,
                  matrix(0), FALSE, params$trans, 2 )
@@ -67,15 +72,43 @@ microbenchmark(QQ <-
          q_hat_mat( matrix(.01,dim(Q)[1],dim(Q)[2]), sol.w$d, Q, Q, d.grid, params$R,params$G, params$lambda,
                                 params$phi, e.grid, params$v.s.coeff, params$tri,
                                 matrix(0), FALSE, params$trans, FALSE ))
-    # .02s
+    # .002s
 
 ## 7. Now just solve and plot ##
-sol.o <- outer.wrapper( d.grid, e.grid, sol.w$d, params, An, Bn, Cn )
-plot.sol((sol.o))
-
+sol.o <- outer.wrapper( sol.w, params, An, Bn, Cn )
+plot.sol(sol.o)
 err.o <- outer.err(sol.o, params, An, Cn )
+plot.err(err.o)
+    # Great!  The solutions line up for lambda = 0 :) :) :)
+
+
+## 8. Try with lambda != 0 ##
+params$cont.type <- 'avg'
+params$lambda <- .95
+sol.in <- sol.wrapper(params)
+plot.z( sol.w$p, sol.w$d, sol.w$params, xlim=c(0,2*max(sol.w$p)), ylim=c(0,2*max(sol.w$p)) )
+plot.z( sol.in$p, sol.in$d, sol.in$params, xlim=c(0,2*max(sol.in$p)), ylim=c(0,2*max(sol.in$p)) )
+    # Compare the two solutions
+l.p <- lapply( list( sol.w, sol.in), function(x) x$d )
+l.d <- lapply( list( sol.w, sol.in), function(x) x$d )
+    # Store the default probabilities and debt levels
+
+params$cont.type <- 'fix'
+params$d.pts <- 21
+for( i in 1:5 ){
+  params$it <- 20
+  sol.out <- outer.wrapper( sol.in, params, l.ABC$An, l.ABC$Bn, l.ABC$Cn )
+  plot.sol(sol.out)
+  err.out <- outer.err(sol.out, params, l.ABC$An, l.ABC$Cn )
+  plot.err(err.out)
+  l.ABC <- ABC(sol.out, params)
+  sol.in <- sol.wrapper( params, cbind(sol.out$p.bar, sol.out$d.bar), l.ABC$An, l.ABC$Bn, l.ABC$Cn )
+  plot.z(sol.in$p, sol.in$d, params, l.ABC$An, l.ABC$Bn, l.ABC$Cn )
+  # message( "An = ", format(l.ABC$An, digits = 2), "Bn = ", format(l.ABC$Bn, digits = 2),
+  #          "Cn = ", format(l.ABC$Cn, digits = 2) )
+}
+
 
 ## TODO:
-## CHECK SOLUTION HOLDS WHEN LAMBDA = 0
-## THEN EXTRACT AN, BN, CN
+## FIGURE OUT HOW TO MAKE THE INNER LOOP CONVERGE FOR SURE
 ## LOOP

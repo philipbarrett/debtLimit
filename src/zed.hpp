@@ -21,9 +21,9 @@ using namespace arma ;
 using namespace R ;
 
 arma::vec zed( arma::vec p, arma::vec d, List params,
-               arma::vec An, arma::vec Cn, arma::mat def ) ;
+               arma::vec An, arma::vec Cn, arma::mat def, int print_level=0 ) ;
 arma::vec zed_d( arma::vec p, arma::vec d, arma::vec d_prime, List params, arma::vec An,
-                 arma::vec Cn, arma::mat def ) ;
+                 arma::vec Cn, arma::mat def, int print_level=0 ) ;
 arma::mat zed_2( arma::vec p, arma::vec d, List params,
                  arma::vec An, arma::vec Bn, arma::vec Cn, arma::mat def ) ;
 arma::mat zed_2_num( arma::vec p, arma::vec d, List params,

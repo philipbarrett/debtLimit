@@ -140,17 +140,19 @@ max.d.s.lin.tri <- function( params, A, B ){
 }
 
 d.init.p <- function( params, An=c(0), Cn=c(0), def=matrix(0), p=NULL, x.sd=-3 ){
-# Computes the initial value of the vector d such that a shock x.sd standard
-# deviations below the mean is required to produce default, using the equation:
+# Computes the initial value of the vector of highest d such that a shock x.sd
+# standard deviations below the mean is required to produce stationary debt,
+# using the equation:
 #     s + x.sd * s.sd + d = d * ((1-lambda)+lambda*qd) / ((1+g)*q)
-
-
   if(is.null(p)) p <- 0 * params$R
       # Set the initial probabilities to zero if missing.
   q <- q.fn( p, params, An, def )
       # The price in the current period
   qd <- if( params$cont.type != 'fix' ) q else Cn
       # The continuation price
+  if( params$d.tri ) x.sd <- max( x.sd, - sqrt(6) +1e-03 )
+      # If using the triangular shock distribution, cannot be more than -sqrt(6)
+      # sds below the mean
   A <- - x.sd * params$surp.sd
       # The intercept
   B <- ( 1 - params$lambda + params$lambda * qd ) / ( params$G * q ) - 1
@@ -217,3 +219,58 @@ p.init.d <- function( params, p, d, An, Bn, Cn, def ){
       # If zero does better, replace
   return( out )
 }
+
+d.p.init.wrapper <- function(params, An, Bn, Cn, def ){
+# Grand wrapper function to find initial guesses for p and d
+
+  ## Set up ##
+  maxit.1 <- 40
+  maxit.2 <- 40
+  nn <- length(params$R)
+  p.fp <- p.guess <- rep( 0, nn )
+  bo.step.1 <- TRUE
+  x.sd <- x.sd.old <- rep( -3, nn )
+  it <- 0
+  tol <- 1e-06
+
+  ## Step 1: Choose d to guarantee an interior fixed point ##
+  while( it < maxit.1 && any(p.fp %in% c(0,1) ) ){
+    d.guess <- d.init.p( params, An, Cn, def, rep(0,nn), x.sd )
+        # Non-increasing debt level given a shock x.sd std devs from mean
+    if( all(d.guess>0) ){
+      p.fp <- p_fp( params, rep(0,nn), d.guess, An, Bn, Cn, def )
+          # The fixed point computation
+      x.sd[p.fp==1] <- x.sd[p.fp==1] * 1.25
+      x.sd[p.fp==0] <- x.sd[p.fp==0] * .9
+          # Update x.sd
+    }else{
+      x.sd[d.guess<0] <- x.sd[d.guess<0] *.5
+    }
+    it <- it + 1
+  }
+
+  if(any(p.fp %in% c(0,1)))
+    stop('Cannot find guess of d with interior fixed point for p')
+
+  ## Step 2: Iterate over initial points to find something near the tangency condition ##
+  it <- 0
+  p.guess.old <- p.guess
+  d.guess.old <- d.guess
+  diff <- 2 * tol
+      # Initialize loop variables
+  while( it < maxit.2 && diff > tol ){
+    p.guess <- p_init_d( params, p.guess.old, d.guess.old, An, Bn, Cn, def )
+    d.guess <- d_init_p( params, p.guess, d.guess.old, An, Bn, Cn, def, 400 )
+        # Update guesses of p and d
+    diff <- max( abs( c( p.guess - p.guess.old, d.guess - d.guess.old ) ) )
+        # The difference
+    p.guess.old <- p.guess
+    d.guess.old <- d.guess
+        # Update guesses
+    it <- it + 1
+        # Increment counter
+  }
+  return( cbind( p.guess, d.guess ) )
+}
+
+

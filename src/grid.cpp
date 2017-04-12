@@ -30,8 +30,8 @@ arma::vec d_grid_fn( arma::vec d, double x_sd, double x_sd_mult=1.5, int n_pts=1
     spread(i) = R::qnorm5( q, 0, x_sd * x_sd_mult, 1, 0 ) ;
         // The distance to spread out around the default boundaries
   }
-  spread(n_pts) = 1e-04 ;
-      // Add a point *just* above the default threshold
+  spread(n_pts) = 1e-01 ;
+      // Add a point just above the default threshold
   for( int i = 0 ; i < n ; i++ ){
     out.subvec(i*(n_pts+1)+1,(i+1)*(n_pts+1)) = d(i) + spread ;
   }
