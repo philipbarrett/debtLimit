@@ -373,6 +373,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rest_var_lhood
+double rest_var_lhood(arma::mat Y, arma::vec par, arma::uvec a_switch, arma::umat A_switch, arma::umat Sigma_switch);
+RcppExport SEXP debtLimits_rest_var_lhood(SEXP YSEXP, SEXP parSEXP, SEXP a_switchSEXP, SEXP A_switchSEXP, SEXP Sigma_switchSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type par(parSEXP);
+    Rcpp::traits::input_parameter< arma::uvec >::type a_switch(a_switchSEXP);
+    Rcpp::traits::input_parameter< arma::umat >::type A_switch(A_switchSEXP);
+    Rcpp::traits::input_parameter< arma::umat >::type Sigma_switch(Sigma_switchSEXP);
+    rcpp_result_gen = Rcpp::wrap(rest_var_lhood(Y, par, a_switch, A_switch, Sigma_switch));
+    return rcpp_result_gen;
+END_RCPP
+}
 // v_surp
 arma::vec v_surp(arma::vec d, arma::vec coeff, arma::vec shift, bool tri);
 RcppExport SEXP debtLimits_v_surp(SEXP dSEXP, SEXP coeffSEXP, SEXP shiftSEXP, SEXP triSEXP) {
