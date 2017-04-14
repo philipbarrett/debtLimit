@@ -6,7 +6,7 @@
 # Philip Barrett, Washington DC
 #####################################################################
 
-outer.wrapper <- function(inner.sol, params, An, Bn, Cn, Q.init=NULL,
+outer.wrapper <- function(inner.sol, params, Q.init=NULL,
                           D.prime.init=NULL, print_level=1 ){
 # Wraps the outer loop for solution.
 
@@ -40,8 +40,8 @@ outer.wrapper <- function(inner.sol, params, An, Bn, Cn, Q.init=NULL,
 
   ## Now solve the model
   ZZ.QQ <- ziter( 0 * Q, d.bar, Q, d.grid, e.grid, params$tri, D.prime.init, D.prime.flag,
-               params, An, Cn, print_level, params$tol, params$maxit, params$q.tol,
-               params$q.maxit, params$d.tol, params$d.maxit, Q_out = TRUE )
+                  params, print_level, params$tol, params$maxit, params$q.tol,
+                  params$q.maxit, params$d.tol, params$d.maxit, Q_out = TRUE )
       # Iterate to find the equilibrium default probabiltiies
   n <- length(params$R)
   ZZ <- ZZ.QQ[1:n,]
@@ -62,10 +62,10 @@ outer.wrapper <- function(inner.sol, params, An, Bn, Cn, Q.init=NULL,
                 p.bar=p.bar ) )
 }
 
-outer.err <- function( sol, params, An, Cn ){
+outer.err <- function( sol, params ){
 # Computes the error on the outer solution
   P.err <- ziter( sol$P, sol$d.bar, sol$Q, sol$d.grid, sol$e.grid, params$tri,
-                  matrix(0,1,1), FALSE, params, An, Cn, print_level=0, maxit=1 ) - sol$P
+                  matrix(0,1,1), FALSE, params, print_level=0, maxit=1 ) - sol$P
       # Error on the outermost fixed point
   Q.new <- q_hat_mat( sol$P, sol$d.bar, sol$Q, sol$Q, sol$d.grid, params$R, params$G,
                       params$lambda, params$phi, sol$e.grid, params$v.s.coeff, params$tri,

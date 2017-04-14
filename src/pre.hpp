@@ -19,6 +19,10 @@
 using namespace Rcpp ;
 using namespace arma ;
 
+arma::vec p_fp( List params, arma::vec p, arma::vec d, arma::vec An,
+                arma::vec Bn, arma::vec Cn, arma::mat def,
+                int maxit, double tol ) ;
+
 double p_init_d_i( List params, arma::vec p, arma::vec d, arma::vec An,
                    arma::vec Bn, arma::vec Cn, arma::mat def, int i ) ;
 arma::vec p_init_d( List params, arma::vec p, arma::vec d, arma::vec An,

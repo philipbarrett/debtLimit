@@ -28,6 +28,7 @@ arma::vec zed_d( arma::vec p, arma::vec d, arma::vec dprime, List params, arma::
   mat trans = params["trans"] ;
   vec R = params["R"] ;
   vec G = params["G"] ;
+  vec shift = params["s.shift"] ;
   vec v_s_coeff = params["v.s.coeff"] ;
   double phi = params["phi"] ;
   double surp_sd = params["surp.sd"] ;
@@ -52,7 +53,7 @@ arma::vec zed_d( arma::vec p, arma::vec d, arma::vec dprime, List params, arma::
       // corresponding probabilities
 
   for( int i = 0 ; i < n ; i++ ){
-    surp = v_surp( d(i) * ones(n), v_s_coeff, G, tri ) ;
+    surp = v_surp( d(i) * ones(n), v_s_coeff, shift, tri ) ;
         // The surplus vector
     for( int j = 0 ; j < n ; j++ ){
       H(i,j) = d(i) * ( ( 1 - lambda ) + lambda * qprime(j) ) / ( q(i) * G(j) ) -
@@ -161,6 +162,7 @@ arma::mat zed_2_ana( arma::vec p, arma::vec d, List params, arma::vec An,
   mat trans = params["trans"] ;
   vec R = params["R"] ;
   vec G = params["G"] ;
+  vec shift = params["s.shift"] ;
   vec v_s_coeff = params["v.s.coeff"] ;
   double phi = params["phi"] ;
   double surp_sd = params["surp.sd"] ;
@@ -189,7 +191,7 @@ arma::mat zed_2_ana( arma::vec p, arma::vec d, List params, arma::vec An,
       // corresponding probabilities, and the derivatives w.r.t. p
 
   for( int i = 0 ; i < n ; i++ ){
-    surp = v_surp( d(i) * ones(n), v_s_coeff, G, tri ) ;
+    surp = v_surp( d(i) * ones(n), v_s_coeff, shift, tri ) ;
         // The surplus vector
     for( int j = 0 ; j < n ; j++ ){
       H(i,j) = d(i) * ( ( 1 - lambda ) + lambda * qprime(j) ) / ( q(i) * G(j) ) -

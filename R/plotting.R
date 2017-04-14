@@ -10,8 +10,8 @@ plot.surp <- function(params, non.stoch=TRUE, x.lim=c(0,200), ... ){
 # Plots the surplus function
   d <- seq( from=x.lim[1], to=x.lim[2], by = 1 )
       # X values
-  surps <- sapply( params$G, function(G)
-    sapply(d, surp, coeff=params$v.s.coeff, G=G, tri=params$tri) )
+  surps <- sapply( params$s.shift, function(shift)
+    sapply(d, surp, coeff=params$v.s.coeff, shift=shift, tri=params$tri) )
       # Y-values
   y.max <- max(surps)
   d.max <- d[which.max(if(is.null(dim(surps))) surps else surps[,1])]
@@ -22,7 +22,8 @@ plot.surp <- function(params, non.stoch=TRUE, x.lim=c(0,200), ... ){
   plot( x.lim, y.lim, type='n', xlab='Debt', ylab='Surplus', ...  )
   for( i in 1:ncol(surps) ){
     lines( d, surps[,i], lwd=2, col=i )
-    if( non.stoch ) abline( 0, params$R[i] - params$G[i], lwd=.5 )
+    if( non.stoch )
+      sapply( 1:ncol(surps), function(j) abline( 0, params$R[i] - params$G[j], lwd=.5, col=j ) )
   }
   legend( 'topright', paste0( 'G = ', round( params$G, 3 ) ), lwd=2, col=1:i, bty='n' )
   abline(h=0)

@@ -20,8 +20,10 @@ sol.nonstoch.poly <- function(params){
   out <- rep(0,n)
       # Initialize the output
   for( i in 1:n ){
-    z <- c( params$v.s.coeff[2] + ( params$G[i] - 1 ) * 100 * params$v.s.coeff[m],
-            params$v.s.coeff[3:(m-1)] )
+    # z <- c( params$v.s.coeff[2] + ( params$G[i] - 1 ) * 100 * params$v.s.coeff[m],
+    #         params$v.s.coeff[3:(m-1)] )
+    z <- params$v.s.coeff[-1]
+    z[1] <- z[1] + params$s.shift[i]
         # Coefficients of the polynomial function for surpluses (add the
         # function of G as a constant)
     z[2] <- z[2] - ( params$R[i] - params$G[i] ) * params$v.s.coeff[1]
@@ -30,9 +32,9 @@ sol.nonstoch.poly <- function(params){
         # The roots
     re.rt <- Re(rt[ abs(Im(rt)) < 1e-12 ])
         # The real roots
-    z.d <- z[-1] * 1:(m-3)
+    z.d <- z[-1] * 1:(m-2)
         # Coefficients of the derivative
-    re.rt.d <- 1 / params$v.s.coeff[1] * z.d %*% sapply(re.rt, function(x) x ^ (1:(m-3)) )
+    re.rt.d <- 1 / params$v.s.coeff[1] * z.d %*% sapply(re.rt, function(x) x ^ (1:(m-2)) )
         # The derivative at the real roots
     out[i] <- max( re.rt[re.rt.d<0] ) * params$v.s.coeff[1]
   }
@@ -220,6 +222,25 @@ p.init.d <- function( params, p, d, An, Bn, Cn, def ){
   return( out )
 }
 
+d.max.s <- function( params ){
+# Returns d maximizing surp - (R-G)*d
+  m <- length(params$v.s.coeff) - 2
+  n <- length(params$R)
+      # Number of states and coefficients
+  z <- params$v.s.coeff[-1]
+      # Initialize the polynomial coefficients of z
+  z.d <- z[-1] * (1:m)
+      # The coefficients of the derivative
+  out <- rep(0,n)
+  for( i in 1:n ){
+    z.d[1] <- z[2] - ( params$R[i] - params$G[i] )
+        # Subtract the R-G part
+    rt <- polyroot(z.d)
+    out[i] <- max( Re(rt[abs(Im(rt))<1e-09]) ) * params$v.s.coeff[1]
+  }
+  return(out)
+}
+
 d.p.init.wrapper <- function(params, An, Bn, Cn, def ){
 # Grand wrapper function to find initial guesses for p and d
 
@@ -234,23 +255,14 @@ d.p.init.wrapper <- function(params, An, Bn, Cn, def ){
   tol <- 1e-06
 
   ## Step 1: Choose d to guarantee an interior fixed point ##
-  while( it < maxit.1 && any(p.fp %in% c(0,1) ) ){
-    d.guess <- d.init.p( params, An, Cn, def, rep(0,nn), x.sd )
-        # Non-increasing debt level given a shock x.sd std devs from mean
-    if( all(d.guess>0) ){
-      p.fp <- p_fp( params, rep(0,nn), d.guess, An, Bn, Cn, def )
-          # The fixed point computation
-      x.sd[p.fp==1] <- x.sd[p.fp==1] * 1.25
-      x.sd[p.fp==0] <- x.sd[p.fp==0] * .9
-          # Update x.sd
-    }else{
-      x.sd[d.guess<0] <- x.sd[d.guess<0] *.5
-    }
-    it <- it + 1
-  }
-
-  if(any(p.fp %in% c(0,1)))
-    stop('Cannot find guess of d with interior fixed point for p')
+  d.opt <- optim( d.max.s(params),
+                    function(d) sum( zed( rep(0,nn), d, params, An, Cn, def, 0 ) ^ 2 ) )
+      # The maximum revenue in excess of R-G
+  d.guess <- d.opt$par
+  p.fp <- p_fp( params, rep(0,nn), d.guess, An, Bn, Cn, def )
+      # Find fixed point
+  if(any(p.fp == 1))
+    stop('Cannot find guess of d with fixed point for p < 1')
 
   ## Step 2: Iterate over initial points to find something near the tangency condition ##
   it <- 0

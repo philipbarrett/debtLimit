@@ -19,10 +19,10 @@
 using namespace Rcpp ;
 using namespace arma ;
 
-arma::vec v_surp( arma::vec d, arma::vec coeff, arma::vec G, bool tri ) ;
-double surp( double d, arma::vec coeff, double G, bool tri ) ;
-double surp_poly( double d, arma::vec coeff, double G ) ;
-double surp_tri( double d, arma::vec coeff, double G ) ;
-double d_surp_tri( double d, arma::vec coeff, double G ) ;
+arma::vec v_surp( arma::vec d, arma::vec coeff, arma::vec shift, bool tri ) ;
+double surp( double d, arma::vec coeff, double shift, bool tri ) ;
+double surp_poly( double d, arma::vec coeff, double shift ) ;
+double surp_tri( double d, arma::vec coeff, double shift ) ;
+double d_surp_tri( double d, arma::vec coeff, double shift ) ;
 
 #endif
