@@ -11,14 +11,15 @@
 #include "qmle.hpp"
 
 // [[Rcpp::export]]
-double rest_var_lhood( arma::mat Y, arma::vec par, arma::uvec a_switch,
-                       arma::umat A_switch, arma::umat Sigma_switch ){
-// NEED TO ADD A CONTSTANT TERM!!!
-
+double rest_var_lhood( arma::mat Y, arma::vec par,
+                       arma::uvec a_switch, arma::umat A_switch, arma::umat Sigma_switch,
+                       arma::vec a_vals, arma::mat A_vals, arma::mat Sigma_vals ){
 // Computes the (negative) likelihood of the restricted VAR of the form:
 //    Y_t = a + A * Y_{t-1} + e_t,  e_t ~ N(0,Sigma)
 // Where the integer matrices A_switch and Sigma_switch define the
 // parameter restrictions (zeros for restricted to zero, one otherwise)
+
+// TODO: ADD THE FIXED VALUES
 
   int m = Y.n_cols ;
   int n = Y.n_rows ;
@@ -33,14 +34,20 @@ double rest_var_lhood( arma::mat Y, arma::vec par, arma::uvec a_switch,
   int counter = 0 ;
       // Counter
   for( int i = 0 ; i < n ; i ++ ){
-    a(i) = par(counter) ;
-    counter++ ;
+    if( a_switch(i) > 0 ){
+      a(i) = par(counter) ;
+      counter++ ;
+    }else{
+      a(i) = a_vals(i) ;
+    }
   }
   for( int j = 0 ; j < n ; j ++ ){
     for( int i = 0 ; i < n ; i ++ ){
       if( A_switch(i,j) > 0 ){
         A(i,j) = par(counter) ;
         counter++ ;
+      }else{
+        A(i,j) = A_vals(i,j) ;
       }
     }
   }
@@ -51,6 +58,9 @@ double rest_var_lhood( arma::mat Y, arma::vec par, arma::uvec a_switch,
         Sigma(i,j) = par(counter) ;
         Sigma(j,i) = par(counter) ;
         counter++ ;
+      }else{
+        Sigma(i,j) = Sigma_vals(i,j) ;
+        Sigma(j,i) = Sigma_vals(j,i) ;
       }
     }
   }

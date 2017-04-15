@@ -69,8 +69,8 @@ qe_mat <- function(d_bar, QHat, Q, d_grid, G, lambda, e_grid, trans, coeff, tri,
     .Call('debtLimits_qe_mat', PACKAGE = 'debtLimits', d_bar, QHat, Q, d_grid, G, lambda, e_grid, trans, coeff, tri, D_prime_0, D_prime_0_flag, print_level, tol, maxit)
 }
 
-rest_var_lhood <- function(Y, par, a_switch, A_switch, Sigma_switch) {
-    .Call('debtLimits_rest_var_lhood', PACKAGE = 'debtLimits', Y, par, a_switch, A_switch, Sigma_switch)
+rest_var_lhood <- function(Y, par, a_switch, A_switch, Sigma_switch, a_vals, A_vals, Sigma_vals) {
+    .Call('debtLimits_rest_var_lhood', PACKAGE = 'debtLimits', Y, par, a_switch, A_switch, Sigma_switch, a_vals, A_vals, Sigma_vals)
 }
 
 v_surp <- function(d, coeff, shift, tri) {
