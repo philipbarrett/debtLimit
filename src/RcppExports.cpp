@@ -374,8 +374,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // rest_var_lhood
-double rest_var_lhood(arma::mat Y, arma::vec par, arma::uvec a_switch, arma::umat A_switch, arma::umat Sigma_switch, arma::vec a_vals, arma::mat A_vals, arma::mat Sigma_vals);
-RcppExport SEXP debtLimits_rest_var_lhood(SEXP YSEXP, SEXP parSEXP, SEXP a_switchSEXP, SEXP A_switchSEXP, SEXP Sigma_switchSEXP, SEXP a_valsSEXP, SEXP A_valsSEXP, SEXP Sigma_valsSEXP) {
+double rest_var_lhood(arma::mat Y, arma::vec par, arma::uvec a_switch, arma::umat A_switch, arma::umat Sigma_switch, arma::vec a_vals, arma::mat A_vals, arma::mat Sigma_vals, int print_level);
+RcppExport SEXP debtLimits_rest_var_lhood(SEXP YSEXP, SEXP parSEXP, SEXP a_switchSEXP, SEXP A_switchSEXP, SEXP Sigma_switchSEXP, SEXP a_valsSEXP, SEXP A_valsSEXP, SEXP Sigma_valsSEXP, SEXP print_levelSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -387,7 +387,50 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type a_vals(a_valsSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type A_vals(A_valsSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Sigma_vals(Sigma_valsSEXP);
-    rcpp_result_gen = Rcpp::wrap(rest_var_lhood(Y, par, a_switch, A_switch, Sigma_switch, a_vals, A_vals, Sigma_vals));
+    Rcpp::traits::input_parameter< int >::type print_level(print_levelSEXP);
+    rcpp_result_gen = Rcpp::wrap(rest_var_lhood(Y, par, a_switch, A_switch, Sigma_switch, a_vals, A_vals, Sigma_vals, print_level));
+    return rcpp_result_gen;
+END_RCPP
+}
+// msw_rest_var_lhood
+double msw_rest_var_lhood(arma::mat Y, arma::vec p0, arma::mat P, arma::mat par, arma::uvec a_switch, arma::umat A_switch, arma::umat Sigma_switch, arma::vec a_vals, arma::mat A_vals, arma::mat Sigma_vals, int print_level);
+RcppExport SEXP debtLimits_msw_rest_var_lhood(SEXP YSEXP, SEXP p0SEXP, SEXP PSEXP, SEXP parSEXP, SEXP a_switchSEXP, SEXP A_switchSEXP, SEXP Sigma_switchSEXP, SEXP a_valsSEXP, SEXP A_valsSEXP, SEXP Sigma_valsSEXP, SEXP print_levelSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type p0(p0SEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type P(PSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type par(parSEXP);
+    Rcpp::traits::input_parameter< arma::uvec >::type a_switch(a_switchSEXP);
+    Rcpp::traits::input_parameter< arma::umat >::type A_switch(A_switchSEXP);
+    Rcpp::traits::input_parameter< arma::umat >::type Sigma_switch(Sigma_switchSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type a_vals(a_valsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type A_vals(A_valsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Sigma_vals(Sigma_valsSEXP);
+    Rcpp::traits::input_parameter< int >::type print_level(print_levelSEXP);
+    rcpp_result_gen = Rcpp::wrap(msw_rest_var_lhood(Y, p0, P, par, a_switch, A_switch, Sigma_switch, a_vals, A_vals, Sigma_vals, print_level));
+    return rcpp_result_gen;
+END_RCPP
+}
+// msw_rest_var_lhood_p
+arma::mat msw_rest_var_lhood_p(arma::mat Y, arma::vec p0, arma::mat P, arma::mat par, arma::uvec a_switch, arma::umat A_switch, arma::umat Sigma_switch, arma::vec a_vals, arma::mat A_vals, arma::mat Sigma_vals, int print_level);
+RcppExport SEXP debtLimits_msw_rest_var_lhood_p(SEXP YSEXP, SEXP p0SEXP, SEXP PSEXP, SEXP parSEXP, SEXP a_switchSEXP, SEXP A_switchSEXP, SEXP Sigma_switchSEXP, SEXP a_valsSEXP, SEXP A_valsSEXP, SEXP Sigma_valsSEXP, SEXP print_levelSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type p0(p0SEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type P(PSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type par(parSEXP);
+    Rcpp::traits::input_parameter< arma::uvec >::type a_switch(a_switchSEXP);
+    Rcpp::traits::input_parameter< arma::umat >::type A_switch(A_switchSEXP);
+    Rcpp::traits::input_parameter< arma::umat >::type Sigma_switch(Sigma_switchSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type a_vals(a_valsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type A_vals(A_valsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Sigma_vals(Sigma_valsSEXP);
+    Rcpp::traits::input_parameter< int >::type print_level(print_levelSEXP);
+    rcpp_result_gen = Rcpp::wrap(msw_rest_var_lhood_p(Y, p0, P, par, a_switch, A_switch, Sigma_switch, a_vals, A_vals, Sigma_vals, print_level));
     return rcpp_result_gen;
 END_RCPP
 }
