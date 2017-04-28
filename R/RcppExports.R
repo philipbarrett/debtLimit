@@ -69,6 +69,14 @@ p_fp <- function(params, p, d, An, Bn, Cn, def, maxit = 200L, tol = 1e-06) {
     .Call('debtLimits_p_fp', PACKAGE = 'debtLimits', params, p, d, An, Bn, Cn, def, maxit, tol)
 }
 
+p_ax_c_i <- function(params, p, d, m, c, i, An, Bn, Cn, def, maxit = 200L, tol = 1e-06, print_level = 0L) {
+    .Call('debtLimits_p_ax_c_i', PACKAGE = 'debtLimits', params, p, d, m, c, i, An, Bn, Cn, def, maxit, tol, print_level)
+}
+
+p_min_tanget_i <- function(params, p, d, m, i, An, Bn, Cn, def, maxit = 200L, tol = 1e-06, print_level = 0L) {
+    .Call('debtLimits_p_min_tanget_i', PACKAGE = 'debtLimits', params, p, d, m, i, An, Bn, Cn, def, maxit, tol, print_level)
+}
+
 d_init_p_i <- function(params, p, d, An, Bn, Cn, def, i, d_max, d_min = 0, maxit = 100L, print_level = 0L, max_outer = 10L, i_outer = 0L, d_step_0 = -10) {
     .Call('debtLimits_d_init_p_i', PACKAGE = 'debtLimits', params, p, d, An, Bn, Cn, def, i, d_max, d_min, maxit, print_level, max_outer, i_outer, d_step_0)
 }

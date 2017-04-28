@@ -46,7 +46,7 @@ plot.z <- function( p, d, params, An=c(0), Bn=c(0), Cn=c(0), def=matrix(0), ... 
   par(mfrow=c(1,1))
 }
 
-plot.z.i <- function( p, d, params, i, An, Bn, Cn, def, global, ... ){
+plot.z.i <- function( p, d, params, i, An, Bn, Cn, def, global, ylim=NULL, ... ){
 # Plots the z function vs. p[i] in state i
   p.seq <- c( seq(0,1e-3,by=1e-5), seq(1e-3,1e-2,by=1e-4), seq(1e-2,1e-1,by=1e-3), seq(1e-1,1,by=1e-2) )
       # The x-values
@@ -57,7 +57,8 @@ plot.z.i <- function( p, d, params, i, An, Bn, Cn, def, global, ... ){
   } ) )
       # The y values
   # if( !exists('ylim')) ylim <- c(0,1)
-  plot( p.seq, y.vals[,1], lwd=2, xlab='p', ylab='z', main=paste0( 'i = ', i ), type='l', ... )
+  plot( p.seq, y.vals[,1], lwd=2, xlab='p', ylab='z', main=paste0( 'i = ', i ),
+        type='l', ylim=ylim, ... )
   abline( 0, 1, lty=2 )
   abline( v=p[i], lty=2 )
   abline( h=p[i], lty=2 )
@@ -69,7 +70,7 @@ plot.z.i <- function( p, d, params, i, An, Bn, Cn, def, global, ... ){
                 min( max(y.vals[,2], na.rm = TRUE ), 10 ) )
       # The y limits for the derivative
   plot( p.seq, y.vals[,2], type = "l", col='red', axes = FALSE, bty = "n",
-        xlab = "", ylab = "", ylim=y.range )
+        xlab = "", ylab = "", ylim=y.range, ... )
       # Plot the derivative
   axis(side=4, at = pretty(y.range))
   # mtext("z.p", side=4, line=3)

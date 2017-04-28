@@ -16,6 +16,7 @@ rg.dta$x <- interp$s.idx
 rg.dta$x.gth <- interp$dta.disc[,'gth']
 rg.dta$x.rfr <- interp$dta.disc[,'rfr']
 plot( disc$d.rmg )
+n.states <- nrow(disc$X)
 
 ## Create the basic surplus function ##
 dta.all <- read.csv( paste0( 'data/', cty, '.csv' ) )
@@ -43,22 +44,38 @@ points( dta[,c('cnlb_gdp_lag','pb_gdp')], col=dta$x )
     # TO ADD: function to plot the fitted surplus function
 
 ## Now try solving the model ##
-params$surp.sd <- .5 # Starting small
+params$surp.sd <- .05 # Starting small
 params$lambda <- 0
 params$phi <- .4
 params$cont.type <- 'avg'
 params$diff.method <- "ana"
 params$inner.method <- 'all'
 params$d.tri <- FALSE # TRUE # FALSE      # Triangular distribution for surplus shocks
-# An <- 1 / params$R
-# Bn <- rep( -1, length(params$R) )
-# Cn <- An
-# def <- matrix(0,1,1)
+An <- 1 / params$R
+Bn <- rep( -1, length(params$R) )
+Cn <- An
+def <- matrix(0,1,1)
 
+# d.init <- rep( max( sol.nonstoch(params) ), length( params$R ) )
 d.init <- sol.nonstoch(params)
+
+for( i in 1:length(params$R) ){
+  xx <- sol.search.i( params, cbind(1e-05,d.init), i, An, Bn, Cn, def,
+                    print.level = 1 )
+  plot.z( xx$p, xx$d, params, An, Bn, Cn, def, xlim=c(0,2*xx$p[i]), ylim=c(0,2*xx$p[i]) )
+}
+
+
+
 plot.z( rep(0,length(params$R)), d.init, params ) #, xlim=c(0,3e-03), ylim=c(0,3e-03) )
 plot.z.d( rep(0,length(params$R)), d.init, params ) #, xlim=c(0,3e-03), ylim=c(0,3e-03) )
-sol <- sol.wrapper( params, plot.on=T, init.guess = d.init %*% t( c(0,1) ) )
-plot.z( sol$p, sol$d, sol$params ) #, xlim=c(0,3e-03), ylim=c(0,3e-03) )
 
+params$it <- 30
+params$tol <- 0.1
+sol.s <- sol.search(params, plot.on = TRUE)
+
+params$tol <- 1e-6
+sol <- sol.wrapper( params, plot.on=T, init.guess = cbind( sol.s$p, sol.s$d ) )
+plot.z( sol$p, sol$d, sol$params , xlim=c(0,1e-04), ylim=c(0,1e-04) )
+plot.z( sol$p, sol$d, sol$params )
 
