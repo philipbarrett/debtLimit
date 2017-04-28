@@ -127,7 +127,7 @@ double d_init_p_i( List params, arma::vec p, arma::vec d, arma::vec An,
   int n = p.n_elem ;
   double d_step = d_step_0 ;
       // The initial step length of d
-  double tol = 1e-06 ;
+  double tol = 1e-08 ;
       // The initial tolerance
   double err = tol*2 ;
   int it = 0 ;

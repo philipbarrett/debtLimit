@@ -1,60 +1,77 @@
-// #include <RcppArmadillo.h>
-// // [[Rcpp::depends(RcppArmadillo)]]
-// using namespace Rcpp;
-// using namespace arma;
-//
-// // [[Rcpp::export]]
-// double q_triangle( double q, double a, double b, double c ){
-// // Triangle distribution inversion
-//   if( q <= ( b - a ) / ( c - a ) ){
-//     double disc = q * ( b - a ) * ( c - a )  ;
-//         // The discriminant
-//         // Because x^2 - 2ay + C = 0, where C = a^2 - disc
-//     return a + pow( disc, .5 ) ;
-//   }
-//   return( c - q_triangle( 1 - q, 0, c - b, c - a ) ) ;
-//       // If q is below the mode then call recursively
-// }
-//
-// // [[Rcpp::export]]
-// arma::vec markov_sim( const int n, const NumericMatrix M, const int s0,
-//                           const int n_s ){
-// // Fast Markov simulation
-//
-//   NumericVector out(n) ;
-//   out(0) = s0 ;
-//   // Initialize output
-//   NumericMatrix sum_M( n_s, n_s ) ;
-//   // The row sum of M
-//   for( int i=0 ; i < n_s ; i++ ){
-//     sum_M( i, 0 ) = M( i , 0 ) ;
-//     // The first column
-//     for( int j=1 ; j < n_s ; j++ ){
-//       sum_M( i, j ) = sum_M( i, j - 1 ) + M( i , j ) ;
-//     }
-//   } // Create the row sum of M
-//
-//   NumericVector shks = runif( n ) ;
-//   // The vector of random shocks on [0,1]
-//   int this_s = 0 ;
-//
-//   for( int i = 1 ; i < n ; i++ ){
-//     this_s = 0 ;
-//     // Initialize counters
-//     while( shks(i) > sum_M( out(i-1), this_s ) ){
-//       this_s++ ;
-//     }
-//     out( i ) = this_s ;
-//   }
-//
-//   vec out_arma = zeros(n) ;
-//   for ( int i = 0 ; i < n ; i++ )
-//     out_arma(i) = out(i) ;
-//         // Convert to arma type
-//
-//   return out_arma ;
-// }
-//
+/***********************************************************************************
+ * sim.cpp
+ *
+ * Computes the model simulation
+ *
+ * 14apr2017
+ * Philip Barrett, DC
+ *
+ ***********************************************************************************/
+
+#include "sim.hpp"
+
+// [[Rcpp::export]]
+arma::vec markov_sim( const int n, const NumericMatrix M, const int s0,
+                      const int n_s ){
+  // Fast Markov simulation
+
+  NumericVector out(n) ;
+  out(0) = s0 ;
+  // Initialize output
+  NumericMatrix sum_M( n_s, n_s ) ;
+  // The row sum of M
+  for( int i=0 ; i < n_s ; i++ ){
+    sum_M( i, 0 ) = M( i , 0 ) ;
+    // The first column
+    for( int j=1 ; j < n_s ; j++ ){
+      sum_M( i, j ) = sum_M( i, j - 1 ) + M( i , j ) ;
+    }
+  } // Create the row sum of M
+
+  NumericVector shks = runif( n ) ;
+  // The vector of random shocks on [0,1]
+  int this_s = 0 ;
+
+  for( int i = 1 ; i < n ; i++ ){
+    this_s = 0 ;
+    // Initialize counters
+    while( shks(i) > sum_M( out(i-1), this_s ) ){
+      this_s++ ;
+    }
+    out( i ) = this_s ;
+  }
+
+  vec out_arma = zeros(n) ;
+  for ( int i = 0 ; i < n ; i++ )
+    out_arma(i) = out(i) ;
+  // Convert to arma type
+
+  return out_arma ;
+}
+
+
+// [[Rcpp::export]]
+arma::mat ms_var( arma::mat a, arma::mat A, arma::mat Sigma, arma::vec ms, int m ){
+  // Simulates a VAR with a Markov switching process for the mean
+  int n_v = A.n_rows ;
+  int n_s = a.n_cols ;
+  // Problem dimensions
+  mat out = zeros( n_v, m ) ;
+  // Initialize output
+  out.col(0) = ( eye(n_v,n_v) - A ) * a.col(ms(0)) ;
+  // First period is conditional average given markov state
+  mat err_0 = randn( n_v, m ) ;
+  // Standrad normal simulations
+  mat sd = chol(Sigma).t() ;
+  // LT matrix s.t. sd * sd.t() = Sigma
+  mat err = sd * err_0 ;
+  // The matrix of errors with variance sigma
+  for( int i = 1 ; i < m ; i++ ){
+    out.col(i) = a.col(ms(i)) + A * out.col(i-1) + err.col(i) ;
+  }
+  return out ;
+}
+
 // double p_triangle( double x, double a, double b, double c ){
 // // Triangle distribution CDF on (a,b,c)
 //   if( x <= a )
@@ -210,3 +227,22 @@
 //                   "s.d", "eps", "s", "p", "rp", "eri", "d.prime", "p.prime", "rp.prime" ) ;
 //   return out ;
 // }
+
+// #include <RcppArmadillo.h>
+// // [[Rcpp::depends(RcppArmadillo)]]
+// using namespace Rcpp;
+// using namespace arma;
+//
+// // [[Rcpp::export]]
+// double q_triangle( double q, double a, double b, double c ){
+// // Triangle distribution inversion
+//   if( q <= ( b - a ) / ( c - a ) ){
+//     double disc = q * ( b - a ) * ( c - a )  ;
+//         // The discriminant
+//         // Because x^2 - 2ay + C = 0, where C = a^2 - disc
+//     return a + pow( disc, .5 ) ;
+//   }
+//   return( c - q_triangle( 1 - q, 0, c - b, c - a ) ) ;
+//       // If q is below the mode then call recursively
+// }
+//

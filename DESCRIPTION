@@ -9,6 +9,6 @@ Maintainer: Philip Barrett <pobarrett@gmail.com>
 Description: More about what it does (maybe more than one line)
 License: GPL (>= 2)
 Imports: Rcpp (>= 0.11.5)
-Depends: nleqslv
+Depends: nleqslv, mvtnorm, RANN, vars, expm
 LinkingTo: Rcpp, RcppArmadillo, BH
 Suggests: testthat

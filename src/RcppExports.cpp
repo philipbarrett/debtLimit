@@ -6,6 +6,159 @@
 
 using namespace Rcpp;
 
+// keep_mat
+arma::mat keep_mat(arma::mat& X, arma::vec keep);
+RcppExport SEXP debtLimits_keep_mat(SEXP XSEXP, SEXP keepSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type keep(keepSEXP);
+    rcpp_result_gen = Rcpp::wrap(keep_mat(X, keep));
+    return rcpp_result_gen;
+END_RCPP
+}
+// pcd_scaling
+arma::mat pcd_scaling(arma::mat& X);
+RcppExport SEXP debtLimits_pcd_scaling(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(pcd_scaling(X));
+    return rcpp_result_gen;
+END_RCPP
+}
+// eds_keep
+arma::vec eds_keep(arma::mat& X_norm, arma::vec& eps);
+RcppExport SEXP debtLimits_eds_keep(SEXP X_normSEXP, SEXP epsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type X_norm(X_normSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type eps(epsSEXP);
+    rcpp_result_gen = Rcpp::wrap(eds_keep(X_norm, eps));
+    return rcpp_result_gen;
+END_RCPP
+}
+// p_eps
+arma::mat p_eps(arma::mat& X, arma::vec& eps);
+RcppExport SEXP debtLimits_p_eps(SEXP XSEXP, SEXP epsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type eps(epsSEXP);
+    rcpp_result_gen = Rcpp::wrap(p_eps(X, eps));
+    return rcpp_result_gen;
+END_RCPP
+}
+// p_eps_const
+arma::mat p_eps_const(arma::mat& X, double eps);
+RcppExport SEXP debtLimits_p_eps_const(SEXP XSEXP, SEXP epsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
+    rcpp_result_gen = Rcpp::wrap(p_eps_const(X, eps));
+    return rcpp_result_gen;
+END_RCPP
+}
+// normal_kernel_density
+arma::vec normal_kernel_density(arma::mat& X, double h);
+RcppExport SEXP debtLimits_normal_kernel_density(SEXP XSEXP, SEXP hSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< double >::type h(hSEXP);
+    rcpp_result_gen = Rcpp::wrap(normal_kernel_density(X, h));
+    return rcpp_result_gen;
+END_RCPP
+}
+// almost_ergodic_indices
+arma::vec almost_ergodic_indices(arma::mat& X, double delta, double h);
+RcppExport SEXP debtLimits_almost_ergodic_indices(SEXP XSEXP, SEXP deltaSEXP, SEXP hSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< double >::type delta(deltaSEXP);
+    Rcpp::traits::input_parameter< double >::type h(hSEXP);
+    rcpp_result_gen = Rcpp::wrap(almost_ergodic_indices(X, delta, h));
+    return rcpp_result_gen;
+END_RCPP
+}
+// almost_ergodic
+arma::mat almost_ergodic(arma::mat& X, double delta, double h);
+RcppExport SEXP debtLimits_almost_ergodic(SEXP XSEXP, SEXP deltaSEXP, SEXP hSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< double >::type delta(deltaSEXP);
+    Rcpp::traits::input_parameter< double >::type h(hSEXP);
+    rcpp_result_gen = Rcpp::wrap(almost_ergodic(X, delta, h));
+    return rcpp_result_gen;
+END_RCPP
+}
+// p_eps_cheap_idx
+arma::vec p_eps_cheap_idx(arma::mat& X, arma::vec& eps, double delta, double h);
+RcppExport SEXP debtLimits_p_eps_cheap_idx(SEXP XSEXP, SEXP epsSEXP, SEXP deltaSEXP, SEXP hSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type eps(epsSEXP);
+    Rcpp::traits::input_parameter< double >::type delta(deltaSEXP);
+    Rcpp::traits::input_parameter< double >::type h(hSEXP);
+    rcpp_result_gen = Rcpp::wrap(p_eps_cheap_idx(X, eps, delta, h));
+    return rcpp_result_gen;
+END_RCPP
+}
+// p_eps_cheap
+arma::mat p_eps_cheap(arma::mat& X, arma::vec& eps, double delta, double h);
+RcppExport SEXP debtLimits_p_eps_cheap(SEXP XSEXP, SEXP epsSEXP, SEXP deltaSEXP, SEXP hSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type eps(epsSEXP);
+    Rcpp::traits::input_parameter< double >::type delta(deltaSEXP);
+    Rcpp::traits::input_parameter< double >::type h(hSEXP);
+    rcpp_result_gen = Rcpp::wrap(p_eps_cheap(X, eps, delta, h));
+    return rcpp_result_gen;
+END_RCPP
+}
+// p_eps_cheap_const_idx
+arma::vec p_eps_cheap_const_idx(arma::mat& X, double eps, double delta, double h);
+RcppExport SEXP debtLimits_p_eps_cheap_const_idx(SEXP XSEXP, SEXP epsSEXP, SEXP deltaSEXP, SEXP hSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
+    Rcpp::traits::input_parameter< double >::type delta(deltaSEXP);
+    Rcpp::traits::input_parameter< double >::type h(hSEXP);
+    rcpp_result_gen = Rcpp::wrap(p_eps_cheap_const_idx(X, eps, delta, h));
+    return rcpp_result_gen;
+END_RCPP
+}
+// p_eps_cheap_const
+arma::mat p_eps_cheap_const(arma::mat& X, double eps, double delta, double h);
+RcppExport SEXP debtLimits_p_eps_cheap_const(SEXP XSEXP, SEXP epsSEXP, SEXP deltaSEXP, SEXP hSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
+    Rcpp::traits::input_parameter< double >::type delta(deltaSEXP);
+    Rcpp::traits::input_parameter< double >::type h(hSEXP);
+    rcpp_result_gen = Rcpp::wrap(p_eps_cheap_const(X, eps, delta, h));
+    return rcpp_result_gen;
+END_RCPP
+}
 // d_grid_fn
 arma::vec d_grid_fn(arma::vec d, double x_sd, double x_sd_mult, int n_pts, double min_dist);
 RcppExport SEXP debtLimits_d_grid_fn(SEXP dSEXP, SEXP x_sdSEXP, SEXP x_sd_multSEXP, SEXP n_ptsSEXP, SEXP min_distSEXP) {
@@ -373,28 +526,35 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rest_var_lhood
-double rest_var_lhood(arma::mat Y, arma::vec par, arma::uvec a_switch, arma::umat A_switch, arma::umat Sigma_switch, arma::vec a_vals, arma::mat A_vals, arma::mat Sigma_vals, int print_level);
-RcppExport SEXP debtLimits_rest_var_lhood(SEXP YSEXP, SEXP parSEXP, SEXP a_switchSEXP, SEXP A_switchSEXP, SEXP Sigma_switchSEXP, SEXP a_valsSEXP, SEXP A_valsSEXP, SEXP Sigma_valsSEXP, SEXP print_levelSEXP) {
+// var_lhood
+double var_lhood(arma::mat Y, arma::vec par, int print_level);
+RcppExport SEXP debtLimits_var_lhood(SEXP YSEXP, SEXP parSEXP, SEXP print_levelSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type Y(YSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type par(parSEXP);
-    Rcpp::traits::input_parameter< arma::uvec >::type a_switch(a_switchSEXP);
-    Rcpp::traits::input_parameter< arma::umat >::type A_switch(A_switchSEXP);
-    Rcpp::traits::input_parameter< arma::umat >::type Sigma_switch(Sigma_switchSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type a_vals(a_valsSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type A_vals(A_valsSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma_vals(Sigma_valsSEXP);
     Rcpp::traits::input_parameter< int >::type print_level(print_levelSEXP);
-    rcpp_result_gen = Rcpp::wrap(rest_var_lhood(Y, par, a_switch, A_switch, Sigma_switch, a_vals, A_vals, Sigma_vals, print_level));
+    rcpp_result_gen = Rcpp::wrap(var_lhood(Y, par, print_level));
     return rcpp_result_gen;
 END_RCPP
 }
-// msw_rest_var_lhood
-double msw_rest_var_lhood(arma::mat Y, arma::vec p0, arma::mat P, arma::mat par, arma::uvec a_switch, arma::umat A_switch, arma::umat Sigma_switch, arma::vec a_vals, arma::mat A_vals, arma::mat Sigma_vals, int print_level);
-RcppExport SEXP debtLimits_msw_rest_var_lhood(SEXP YSEXP, SEXP p0SEXP, SEXP PSEXP, SEXP parSEXP, SEXP a_switchSEXP, SEXP A_switchSEXP, SEXP Sigma_switchSEXP, SEXP a_valsSEXP, SEXP A_valsSEXP, SEXP Sigma_valsSEXP, SEXP print_levelSEXP) {
+// one_step_var_lhood
+arma::vec one_step_var_lhood(arma::mat Y, arma::mat par, int print_level);
+RcppExport SEXP debtLimits_one_step_var_lhood(SEXP YSEXP, SEXP parSEXP, SEXP print_levelSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type par(parSEXP);
+    Rcpp::traits::input_parameter< int >::type print_level(print_levelSEXP);
+    rcpp_result_gen = Rcpp::wrap(one_step_var_lhood(Y, par, print_level));
+    return rcpp_result_gen;
+END_RCPP
+}
+// msw_var_lhood
+double msw_var_lhood(arma::mat Y, arma::vec p0, arma::mat P, arma::mat par, int print_level);
+RcppExport SEXP debtLimits_msw_var_lhood(SEXP YSEXP, SEXP p0SEXP, SEXP PSEXP, SEXP parSEXP, SEXP print_levelSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -402,20 +562,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type p0(p0SEXP);
     Rcpp::traits::input_parameter< arma::mat >::type P(PSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type par(parSEXP);
-    Rcpp::traits::input_parameter< arma::uvec >::type a_switch(a_switchSEXP);
-    Rcpp::traits::input_parameter< arma::umat >::type A_switch(A_switchSEXP);
-    Rcpp::traits::input_parameter< arma::umat >::type Sigma_switch(Sigma_switchSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type a_vals(a_valsSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type A_vals(A_valsSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma_vals(Sigma_valsSEXP);
     Rcpp::traits::input_parameter< int >::type print_level(print_levelSEXP);
-    rcpp_result_gen = Rcpp::wrap(msw_rest_var_lhood(Y, p0, P, par, a_switch, A_switch, Sigma_switch, a_vals, A_vals, Sigma_vals, print_level));
+    rcpp_result_gen = Rcpp::wrap(msw_var_lhood(Y, p0, P, par, print_level));
     return rcpp_result_gen;
 END_RCPP
 }
-// msw_rest_var_lhood_p
-arma::mat msw_rest_var_lhood_p(arma::mat Y, arma::vec p0, arma::mat P, arma::mat par, arma::uvec a_switch, arma::umat A_switch, arma::umat Sigma_switch, arma::vec a_vals, arma::mat A_vals, arma::mat Sigma_vals, int print_level);
-RcppExport SEXP debtLimits_msw_rest_var_lhood_p(SEXP YSEXP, SEXP p0SEXP, SEXP PSEXP, SEXP parSEXP, SEXP a_switchSEXP, SEXP A_switchSEXP, SEXP Sigma_switchSEXP, SEXP a_valsSEXP, SEXP A_valsSEXP, SEXP Sigma_valsSEXP, SEXP print_levelSEXP) {
+// msw_var_lhood_p
+arma::mat msw_var_lhood_p(arma::mat Y, arma::vec p0, arma::mat P, arma::mat par, int print_level);
+RcppExport SEXP debtLimits_msw_var_lhood_p(SEXP YSEXP, SEXP p0SEXP, SEXP PSEXP, SEXP parSEXP, SEXP print_levelSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -423,14 +577,37 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type p0(p0SEXP);
     Rcpp::traits::input_parameter< arma::mat >::type P(PSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type par(parSEXP);
-    Rcpp::traits::input_parameter< arma::uvec >::type a_switch(a_switchSEXP);
-    Rcpp::traits::input_parameter< arma::umat >::type A_switch(A_switchSEXP);
-    Rcpp::traits::input_parameter< arma::umat >::type Sigma_switch(Sigma_switchSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type a_vals(a_valsSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type A_vals(A_valsSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma_vals(Sigma_valsSEXP);
     Rcpp::traits::input_parameter< int >::type print_level(print_levelSEXP);
-    rcpp_result_gen = Rcpp::wrap(msw_rest_var_lhood_p(Y, p0, P, par, a_switch, A_switch, Sigma_switch, a_vals, A_vals, Sigma_vals, print_level));
+    rcpp_result_gen = Rcpp::wrap(msw_var_lhood_p(Y, p0, P, par, print_level));
+    return rcpp_result_gen;
+END_RCPP
+}
+// markov_sim
+arma::vec markov_sim(const int n, const NumericMatrix M, const int s0, const int n_s);
+RcppExport SEXP debtLimits_markov_sim(SEXP nSEXP, SEXP MSEXP, SEXP s0SEXP, SEXP n_sSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix >::type M(MSEXP);
+    Rcpp::traits::input_parameter< const int >::type s0(s0SEXP);
+    Rcpp::traits::input_parameter< const int >::type n_s(n_sSEXP);
+    rcpp_result_gen = Rcpp::wrap(markov_sim(n, M, s0, n_s));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ms_var
+arma::mat ms_var(arma::mat a, arma::mat A, arma::mat Sigma, arma::vec ms, int m);
+RcppExport SEXP debtLimits_ms_var(SEXP aSEXP, SEXP ASEXP, SEXP SigmaSEXP, SEXP msSEXP, SEXP mSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type a(aSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type A(ASEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Sigma(SigmaSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type ms(msSEXP);
+    Rcpp::traits::input_parameter< int >::type m(mSEXP);
+    rcpp_result_gen = Rcpp::wrap(ms_var(a, A, Sigma, ms, m));
     return rcpp_result_gen;
 END_RCPP
 }

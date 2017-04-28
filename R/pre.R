@@ -30,7 +30,7 @@ sol.nonstoch.poly <- function(params){
         # Subtract R-G*scaling from the linear ccoefficient
     rt <- polyroot(z)
         # The roots
-    re.rt <- Re(rt[ abs(Im(rt)) < 1e-12 ])
+    re.rt <- Re(rt[ abs(Im(rt)) < 1e-8 ])
         # The real roots
     z.d <- z[-1] * 1:(m-2)
         # Coefficients of the derivative

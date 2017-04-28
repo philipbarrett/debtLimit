@@ -22,8 +22,10 @@ plot.surp <- function(params, non.stoch=TRUE, x.lim=c(0,200), ... ){
   plot( x.lim, y.lim, type='n', xlab='Debt', ylab='Surplus', ...  )
   for( i in 1:ncol(surps) ){
     lines( d, surps[,i], lwd=2, col=i )
-    if( non.stoch )
-      sapply( 1:ncol(surps), function(j) abline( 0, params$R[i] - params$G[j], lwd=.5, col=j ) )
+    if( non.stoch ){
+      sapply( 1:ncol(surps), function(j) abline( 0, params$R[i] - params$G[j], lwd=.5, col=i, lty=2 ) )
+      abline( 0, params$R[i] - params$G[i], lwd=1, col=i )
+    }
   }
   legend( 'topright', paste0( 'G = ', round( params$G, 3 ) ), lwd=2, col=1:i, bty='n' )
   abline(h=0)
@@ -76,12 +78,13 @@ plot.z.i <- function( p, d, params, i, An, Bn, Cn, def, global, ... ){
 }
 
 plot.z.d <- function( p, d, params, An=c(0), Bn=c(0), Cn=c(0), def=matrix(0),
-                    d.range=c(0,200), global=NULL, ... ){
+                    d.range=NULL, global=NULL, ... ){
 # Plots the zed function for all the values of i
   n <- length(params$R)
   n.x <- ceiling( sqrt(n) )
   n.y <- ceiling( n / n.x )
   par(mfrow=c(n.y,n.x))
+  if(is.null(d.range)) d.range <- c( 0, max(400, max(d)))
   # global.apx <- p_init_d( params, p, d, An, Bn, Cn, def )
   for( i in 1:n )
     plot.z.d.i( p, d, params, i, An, Bn, Cn, def, d.range, global, ... )

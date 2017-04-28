@@ -56,6 +56,18 @@ decades.mu.melt <- melt(decades.mu,id="Decade", variable.name='Country', value.n
 g1 <- ggplot(decades.mu.melt,aes(x=Decade,y=`R minus G`,colour=Country,group=Country)) +
           geom_line(size=1) + ggtitle('Decadal means')
 
+rminusg.oecd <- rminusg[,-ncol(rminusg)]
+    # Drop Sweden
+rminusg.oecd[,-1] <- rminusg.oecd[,-1] / 4
+    # De-annualize
+decades.mu.oecd <- aggregate( rminusg.oecd[,-1], list(cut(rminusg.oecd$DATE, cuts, labs )), mean, na.rm=TRUE )
+names(decades.mu.oecd)[1] <- 'Decade'
+decades.mu..oecd.melt <- melt(decades.mu.oecd,id="Decade", variable.name='Country',
+                              value.name='Interest growth differential')
+g1.oecd <- ggplot(decades.mu..oecd.melt,aes(x=Decade,y=`Interest growth differential`,colour=Country,group=Country)) +
+  geom_line(size=1) %+ ggtitle('Decadal means')
+ggsave('~/Dropbox/2017/research/debtLimits/charts/rmg.pdf', g1.oecd)
+
 decades.sd <- aggregate( rminusg[,-1], list(cut(rminusg$DATE, cuts, labs )), sd, na.rm=TRUE)
 names(decades.sd)[1] <- 'Decade'
 decades.sd.melt <- melt(decades.sd,id="Decade", variable.name='Country', value.name='R minus G sd')

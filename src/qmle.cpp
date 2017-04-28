@@ -8,13 +8,15 @@
  *
  ***********************************************************************************/
 
+/**
+ * Do do:
+ *  - Debug
+ */
+
 #include "qmle.hpp"
 
 // [[Rcpp::export]]
-double rest_var_lhood( arma::mat Y, arma::vec par,
-                       arma::uvec a_switch, arma::umat A_switch, arma::umat Sigma_switch,
-                       arma::vec a_vals, arma::mat A_vals, arma::mat Sigma_vals,
-                       int print_level = 0 ){
+double var_lhood( arma::mat Y, arma::vec par, int print_level = 0 ){
 // Computes the (negative) likelihood of the restricted VAR of the form:
 //    Y_t = a + A * Y_{t-1} + e_t,  e_t ~ N(0,Sigma)
 // Where the integer matrices A_switch and Sigma_switch define the
@@ -33,34 +35,21 @@ double rest_var_lhood( arma::mat Y, arma::vec par,
   int counter = 0 ;
       // Counter
   for( int i = 0 ; i < n ; i ++ ){
-    if( a_switch(i) > 0 ){
-      a(i) = par(counter) ;
-      counter++ ;
-    }else{
-      a(i) = a_vals(i) ;
-    }
+    a(i) = par(counter) ;
+    counter++ ;
   }
   for( int j = 0 ; j < n ; j ++ ){
     for( int i = 0 ; i < n ; i ++ ){
-      if( A_switch(i,j) > 0 ){
-        A(i,j) = par(counter) ;
-        counter++ ;
-      }else{
-        A(i,j) = A_vals(i,j) ;
-      }
+      A(i,j) = par(counter) ;
+      counter++ ;
     }
   }
       // Copy parameters into A
   for( int i = 0 ; i < n ; i ++ ){
     for( int j = 0 ; j <= i ; j ++ ){
-      if( Sigma_switch(i,j) > 0 ){
-        Sigma(i,j) = par(counter) ;
-        Sigma(j,i) = par(counter) ;
-        counter++ ;
-      }else{
-        Sigma(i,j) = Sigma_vals(i,j) ;
-        Sigma(j,i) = Sigma_vals(j,i) ;
-      }
+      Sigma(i,j) = par(counter) ;
+      Sigma(j,i) = par(counter) ;
+      counter++ ;
     }
   }
       // Copy parameters into Sigma
@@ -77,7 +66,8 @@ double rest_var_lhood( arma::mat Y, arma::vec par,
     term += temp(0) ;
   }
   if( print_level > 0 ){
-    Rcout << "A = " << A <<std::endl ;
+    Rcout << "a:\n" << a <<std::endl ;
+    Rcout << "A:\n" << A <<std::endl ;
     Rcout << "Sigma:\n" << Sigma <<std::endl ;
     Rcout << "Sigma_I:\n" << Sigma_I <<std::endl ;
     Rcout << "term = " << term <<std::endl ;
@@ -96,10 +86,8 @@ double rest_var_lhood( arma::mat Y, arma::vec par,
 /** To add: derivative here **/
 
 
-arma::vec one_step_rest_var_lhood( arma::mat Y, arma::mat par, arma::uvec a_switch,
-                                   arma::umat A_switch, arma::umat Sigma_switch,
-                                   arma::vec a_vals, arma::mat A_vals, arma::mat Sigma_vals,
-                                   int print_level = 0 ){
+// [[Rcpp::export]]
+arma::vec one_step_var_lhood( arma::mat Y, arma::mat par, int print_level = 0 ){
 // Computes the vector of conditional one-step likelihoods for the restricted
 // VAR, across different states, where the restrictions are assumed to be the
 // same across all the states.
@@ -108,18 +96,14 @@ arma::vec one_step_rest_var_lhood( arma::mat Y, arma::mat par, arma::uvec a_swit
   vec out = zeros(n_states) ;
       // Initialize the output
   for ( int i = 0 ; i < n_states ; i++ ){
-    out(i) = rest_var_lhood( Y, par.col(i), a_switch, A_switch, Sigma_switch,
-                              a_vals, A_vals, Sigma_vals, print_level ) ;
+    out(i) = var_lhood( Y, par.col(i), print_level ) ;
   }
   return out ;
 }
 
 // [[Rcpp::export]]
-double msw_rest_var_lhood( arma::mat Y, arma::vec p0, arma::mat P,
-                           arma::mat par, arma::uvec a_switch,
-                           arma::umat A_switch, arma::umat Sigma_switch,
-                           arma::vec a_vals, arma::mat A_vals, arma::mat Sigma_vals,
-                           int print_level = 0 ){
+double msw_var_lhood( arma::mat Y, arma::vec p0, arma::mat P,
+                           arma::mat par, int print_level = 0 ){
 // Computes the quasi-likelihood for the Markov switching model
   double l_inc = 0 ;
   double l = 0 ;
@@ -136,8 +120,7 @@ double msw_rest_var_lhood( arma::mat Y, arma::vec p0, arma::mat P,
   vec p_pred = P_t * p_filter ;
       // Initialize the prediction and filtering probabilities
   for( int i = 1 ; i < m ; i ++ ){
-    l_vec = one_step_rest_var_lhood( Y.cols(i-1,i), par, a_switch, A_switch, Sigma_switch,
-                                     a_vals, A_vals, Sigma_vals, print_level ) ;
+    l_vec = one_step_var_lhood( Y.cols(i-1,i), par, print_level ) ;
     p_vec = exp( - l_vec ) ;
         // The vector of likelihoods
     l_inc = dot(p_pred, p_vec) ;
@@ -151,11 +134,8 @@ double msw_rest_var_lhood( arma::mat Y, arma::vec p0, arma::mat P,
 }
 
 // [[Rcpp::export]]
-arma::mat msw_rest_var_lhood_p( arma::mat Y, arma::vec p0, arma::mat P,
-                                 arma::mat par, arma::uvec a_switch,
-                                 arma::umat A_switch, arma::umat Sigma_switch,
-                                 arma::vec a_vals, arma::mat A_vals, arma::mat Sigma_vals,
-                                 int print_level = 0 ){
+arma::mat msw_var_lhood_p( arma::mat Y, arma::vec p0, arma::mat P,
+                                 arma::mat par, int print_level = 0 ){
 // Returns the forecast and filterin probabilities for the quasi-likelihood for
 // the Markov switching model
   double l_inc = 0 ;
@@ -178,8 +158,7 @@ arma::mat msw_rest_var_lhood_p( arma::mat Y, arma::vec p0, arma::mat P,
   m_p_pred.col(0) = p_pred ;
       // Initialization
   for( int i = 1 ; i < m ; i ++ ){
-    l_vec = one_step_rest_var_lhood( Y.cols(i-1,i), par, a_switch, A_switch, Sigma_switch,
-                                     a_vals, A_vals, Sigma_vals, print_level ) ;
+    l_vec = one_step_var_lhood( Y.cols(i-1,i), par, print_level ) ;
     p_vec = exp( - l_vec ) ;
         // The vector of likelihoods
     l_inc = dot( p_pred, p_vec ) ;

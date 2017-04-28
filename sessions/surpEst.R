@@ -17,28 +17,36 @@ cty <- 'USA'
 dta <- read.csv( paste0( 'data/', cty, '.csv' ) )
 dta$Date <- as.Date( dta$Date, "%m/%d/%Y" )
     # Read in data
-dta$pub_D.yrend <- mapply( function(x,y) if(month(x)==10) y else NA, dta$Date, dta$Pub_D )
-dta$pub_D.yrstart <- mapply( function(x,y) if(month(x)==1) y else NA, dta$Date, dta$Pub_D )
-    # Add year end/start debt (only one is true)
-dta$OB_GDP4 <- dta$OB_GDP / 4
-    # Compute the overall balance as a share of annual GDP
-dta$Pub_D.imp <- dta$Pub_D.imp.1 <- dta$Pub_D
-dta$Pub_D.imp[-1] <- dta$Pub_D.imp.1[-1] <- NA
-for( i in 2:nrow(dta) ){
-  dta$Pub_D.imp[i] <- ( dta$Pub_D.imp[i-1]  ) / ( 1 + dta$ngdp_pch[i] /100 ) - dta$OB_GDP4[i] # + dta$Int_Exp_2[i]
-  if(month(dta$Date[i])==10){
-    dta$Pub_D.imp.1[i] <- dta$Pub_D[i]
-  }else{
-    dta$Pub_D.imp.1[i] <- ( dta$Pub_D.imp.1[i-1]  ) / ( 1 + dta$ngdp_pch[i] /100 ) - dta$OB_GDP4[i]
-  }
-}
+# dta$pub_D.yrend <- mapply( function(x,y) if(month(x)==10) y else NA, dta$Date, dta$Pub_D )
+# dta$pub_D.yrstart <- mapply( function(x,y) if(month(x)==1) y else NA, dta$Date, dta$Pub_D )
+#     # Add year end/start debt (only one is true)
+# dta$OB_GDP4 <- dta$OB_GDP / 4
+#     # Compute the overall balance as a share of annual GDP
+# dta$Pub_D.imp <- dta$Pub_D.imp.1 <- dta$Pub_D
+# dta$Pub_D.imp[-1] <- dta$Pub_D.imp.1[-1] <- NA
+# for( i in 2:nrow(dta) ){
+#   dta$Pub_D.imp[i] <- ( dta$Pub_D.imp[i-1]  ) / ( 1 + dta$ngdp_pch[i] /100 ) - dta$OB_GDP4[i] # + dta$Int_Exp_2[i]
+#   if(month(dta$Date[i])==10){
+#     dta$Pub_D.imp.1[i] <- dta$Pub_D[i]
+#   }else{
+#     dta$Pub_D.imp.1[i] <- ( dta$Pub_D.imp.1[i-1]  ) / ( 1 + dta$ngdp_pch[i] /100 ) - dta$OB_GDP4[i]
+#   }
+# }
     # Compute implied debt (assumes debt is year-end) face value
 dta$ngdp_pch4 <- filter( dta$ngdp_pch, c(1,1,1,1), sides=1 ) / 4
 
+par(mfrow=c(2,1))
+with( dta, plot(Date, pb_gdp, type='l' ) )
+abline(h=0, col='blue')
+with( dta, plot(Date, cnlb_gdp, type='l' ) )
+par(mfrow=c(1,1))
+with( dta, plot(cnlb_gdp_lag, pb_gdp, col=1+1*( ngdp_pch>mean(ngdp_pch) ), pch=16 ) )
+with( dta, lines(cnlb_gdp_lag, pb_gdp, lwd=.5 ) )
+
+
 ## 2. Estimate the unconstrained surplus model ##
 scaling <- 80
-x.max <- 250
-dta$Pub_D.lag <- c( NA, dta$Pub_D.imp.1[-1] )
+x.max <- 400
 n.poly <- 3
 n.states <- 2
 set.seed(42)
@@ -49,15 +57,16 @@ points(kk$centers, col=1:n.states, pch=15, cex=2 )
 abline(0,1,lty=2)
     # Discretize the states
 dta$x <- as.factor(kk$cluster)
-mod <- lm( OB_GDP4 ~ poly(Pub_D.lag, n.poly, raw = TRUE) + x,
-           data=subset(dta, Date < "2020-01-01"), na.action = na.exclude )
+mod <- lm( pb_gdp ~ poly(cnlb_gdp_lag, n.poly, raw = TRUE), # + poly(ngdp_pch, 2, raw=TRUE),
+           data=subset(dta), na.action = na.exclude )
 pred <- predict(mod, dta)
 v.s.coeff <- c( scaling, mod$coefficients[1:(n.poly+1)] * scaling ^ (0:(n.poly)) )
-shift <- c(0, tail(mod$coefficients, n.states-1))
-params <- list(v.s.coeff=v.s.coeff, R=kk$centers[,1], G=kk$centers[,2], s.shift=shift, tri=FALSE)
-pred.scale <- mapply( surp, dta$Pub_D.lag, params$s.shift[dta$x], MoreArgs = list(coeff=v.s.coeff, tri=FALSE) )
-plot.surp(params, xlim=c(0,x.max), ylim=c(-8,4))
-with( dta, points( Pub_D.lag, OB_GDP4, col=x ) )
+shift <- rep(0, n.states) # c(0, tail(mod$coefficients, n.states-1))
+params <- list(v.s.coeff=v.s.coeff, R=rep(mean(dta$rfr)/4,n.states),
+               G=rep(mean(dta$ngdp_pch),n.states), s.shift=shift, tri=FALSE)
+pred.scale <- mapply( surp, dta$cnlb_gdp_lag, params$s.shift[dta$x], MoreArgs = list(coeff=v.s.coeff, tri=FALSE) )
+plot.surp(params, x.lim = c(0,x.max), ylim=c(-20,4))
+with( dta, points( cnlb_gdp_lag, pb_gdp ) ) #, col=x ) )
 # par(new = T)
 # hist(dta$Pub_D, axes=F, xlab=NA, ylab=NA, xlim=c(0,x.max), main='', col=rgb(0,0,1,alpha=0.2),
 #      breaks = 20  )
@@ -74,18 +83,19 @@ params.gkmoq$v.s.coeff[2] <- 0
 plot.surp(params.gkmoq,x.lim = c(0,250), ylim=c(-3,3) )
     # plot the function
 gkmo.opt <- optim( params.gkmoq$s.shift,
-             function(par) sum( ( mapply( surp, dta$Pub_D.lag, par[dta$x],
+             function(par) sum( ( mapply( surp, dta$cnlb_gdp_lag, par[dta$x],
                                           MoreArgs = list(coeff=params.gkmoq$v.s.coeff,
                                                                   tri=params$tri) ) -
                                     dta$OB_GDP4 ) ^ 2, na.rm = TRUE ) )
     # Substitute in the Ghosh-Kim-Mendoza-Ostry-Qureshi params
 params.alt <- params.gkmoq
 params.alt$s.shift <- gkmo.opt$par
-pred.alt <- mapply( surp, dta$Pub_D.lag, params.alt$s.shift[dta$x],
+pred.alt <- mapply( surp, dta$cnlb_gdp_lag, params.alt$s.shift[dta$x],
                     MoreArgs = list(coeff=params.gkmoq$v.s.coeff, tri=params$tri) )
     # Try minimizing absolute error
-plot.surp(params.alt, ylim=c(-4,4))
-with( dta, points( Pub_D.lag, OB_GDP4, col=x ) )
+plot.surp(params.alt, ylim=c(-4,4), x.lim=c(0,x.max))
+with( dta, points( cnlb_gdp_lag, pb_gdp ), col=x )
+# with( dta, points( Pub_D.lag, OB_GDP4, col=x ) )
 # with( subset( dta, ngdp_pch > mean(ngdp_pch) ), points( Pub_D.lag, OB_GDP4, col='blue' ) )
 # with( subset( dta, ngdp_pch < mean(ngdp_pch) ), points( Pub_D.lag, OB_GDP4, col='red' ) )
 

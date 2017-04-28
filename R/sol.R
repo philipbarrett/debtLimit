@@ -10,7 +10,7 @@ sol.wrapper <- function( params, init.guess=NULL,
                          An=c(0), Bn=c(0), Cn=c(0), def=matrix(0), i=1, plot.on=FALSE ){
 # Wraps and processes the solution output from the nonlinear solver
 
-  n <- length(params$R)
+  nn <- length(params$R)
   if(is.null(init.guess)){
     init.guess <- d.p.init.wrapper( params, An, Bn, Cn, def )
   }
@@ -29,7 +29,7 @@ sol.wrapper <- function( params, init.guess=NULL,
     it <- it + 1
     message("it = ", it )
     if( method == 'err' ){
-      err.i <- zed_2( p.guess, d.guess, params, An, Bn, Cn, def ) - cbind( p.guess, rep(1,n) )
+      err.i <- zed_2( p.guess, d.guess, params, An, Bn, Cn, def ) - cbind( p.guess, rep(1,nn) )
           # Evaluate the error
       i <- which.max(abs(err.i[,1]))
           # Choose the state to improve based on probability error
@@ -45,8 +45,8 @@ sol.wrapper <- function( params, init.guess=NULL,
           # Solve and update guesses
     }
     if( method == 'all' ){
-      for( i in 1:n ){
-        err.i <- zed_2( p.guess, d.guess, params, An, Bn, Cn, def ) - cbind( p.guess, rep(1,n) )
+      for( i in 1:nn ){
+        err.i <- zed_2( p.guess, d.guess, params, An, Bn, Cn, def ) - cbind( p.guess, rep(1,nn) )
         if(abs(err.i[i,1]) > 1e-02){
           # p.guess[i] <- p_init_d_i( params, p.guess, d.guess, An, Bn, Cn, def, i-1 )
           p.guess[i] <- 0
@@ -68,7 +68,7 @@ sol.wrapper <- function( params, init.guess=NULL,
       stop('Inner iteration method not recognized')
     }
     err <- max( abs( zed_2( p.guess, d.guess, params, An, Bn, Cn, def ) -
-                       c( p.guess, rep(1,n) ) ) )
+                       c( p.guess, rep(1,nn) ) ) )
     message("   err = ", round(err,4) )
   }
 
@@ -80,7 +80,7 @@ sol.wrapper <- function( params, init.guess=NULL,
 sol.core.global <- function( params, init.guess, st.which.sol, An, Bn, Cn, def, i=1 ){
 # Returns a global solution in either the i-th state or overall
 
-  n <- length(params$R)
+  nn <- length(params$R)
   guess <- init.guess
       # Set up
   maxit <- if(is.null(params$gloabl.it)) 10 else params$global.it
@@ -96,20 +96,20 @@ sol.core.global <- function( params, init.guess, st.which.sol, An, Bn, Cn, def, 
     it <- it + 1
     if(st.which.sol == 'core.nl'){
       sol <- sol.core.nl(params, guess, An, Bn, Cn, def)
-      cand.p <- sol$x[1:n]
-      d <- sol$x[n+1:n]
+      cand.p <- sol$x[1:nn]
+      d <- sol$x[nn+1:nn]
           # Reorder the solution elements
       p.global <- p_init_d( params, cand.p, d, An, Bn, Cn, def )
           # Check for approximate globality
       z.global <- zed( p.global, d, params, An, Cn, def, 0 )
           # The values of z at the approximate global solutions
-      p.global[ z.global - p.global >= sol$fvec[1:n] ] <-
-                              cand.p[ z.global - p.global >= sol$fvec[1:n] ]
+      p.global[ z.global - p.global >= sol$fvec[1:nn] ] <-
+                              cand.p[ z.global - p.global >= sol$fvec[1:nn] ]
           # If the approximate global minimum is inferior to the candidate
           # solution, then replace
       guess <- cbind( p.global, d )
           # Update the guess
-      err <- matrix( sol$fvec, nrow = n, ncol = 2 )
+      err <- matrix( sol$fvec, nrow = nn, ncol = 2 )
           # The error
     }else if(st.which.sol == 'core.nl.i'){
       sol <- sol.core.nl.i(params, guess, An, Bn, Cn, def, i)
@@ -160,7 +160,7 @@ sol.core.local <- function( params, init.guess, st.which.sol, An, Bn, Cn, def, i
 # Returns a local solution in either the i-th state or overall
 
   # browser()
-  n <- length(params$R)
+  nn <- length(params$R)
   guess <- init.guess
       # Set up
   maxit <- if(is.null(params$gloabl.it)) 50 else params$global.it
@@ -177,16 +177,18 @@ sol.core.local <- function( params, init.guess, st.which.sol, An, Bn, Cn, def, i
     }
     if(st.which.sol == 'core.nl'){
       sol <- sol.core.nl(params, guess, An, Bn, Cn, def)
-      guess[,1] <- sol$x[1:n]
-      guess[,1] <- sol$x[n+1:n]
+      guess[,1] <- sol$x[1:nn]
+      guess[,1] <- sol$x[nn+1:nn]
           # Reorder the solution elements
-      err <- matrix( sol$fvec, nrow = n, ncol = 2 )
+      err <- matrix( sol$fvec, nrow = nn, ncol = 2 )
           # The error
     }else if(st.which.sol == 'core.nl.i'){
       sol <- sol.core.nl.i(params, guess, An, Bn, Cn, def, i)
       if(max(abs(sol$fvec))>1e-04){
-        d.init <- d_init_p_i( params, rep(0,nn), rep(130,nn), An, Bn, Cn, def, i-1, 200 )
-            # Find a better guess for d
+        d.init <- d_init_p_i( params, pmax(guess[,'p.guess'], 1e-07), guess[,'d.guess'],
+                              An, Bn, Cn, def, i-1, max( 200, max(guess[,'d.guess']) ) )
+            # Find a better guess for d.  The increment for p is to guarantee
+            # solution when p~=0
         guess[i,'d.guess'] <- d.init
         sol <- sol.core.nl.i(params, guess, An, Bn, Cn, def, i)
       }
@@ -194,7 +196,7 @@ sol.core.local <- function( params, init.guess, st.which.sol, An, Bn, Cn, def, i
       guess[i,2] <- sol$x[2]
           # Reorder the solution elements, extracting the i'th elements where
           # required
-      err <- matrix( sol$fvec, nrow = n, ncol = 2 )
+      err <- matrix( sol$fvec, nrow = nn, ncol = 2 )
           # The error
     }else{
       stop('Solution method not recognized')
@@ -224,16 +226,16 @@ sol.core.nl <- function(params, init.guess, An, Bn, Cn, def){
 
   x0 <- c( init.guess )
       # Reformat as a vector
-  n <- nrow(init.guess)
+  nn <- nrow(init.guess)
       # The number of states
   fn <- function(x){
       # The function for which we want to find the root
-    p <- pmax( x[1:n], 0 )
-    d <- x[n+1:n]
+    p <- pmax( x[1:nn], 0 )
+    d <- x[nn+1:nn]
         # Extract the values
     z.2 <- zed_2( p, d, params, An, Bn, Cn, def )
         # The vector of: the implied value of p and the gradient wrt p
-    return( c( z.2 - cbind( p, rep(1,n) ) ) )
+    return( c( z.2 - cbind( p, rep(1,nn) ) ) )
         # Becuase we want the slope to be unity at the fixed point
   }
 
@@ -249,7 +251,7 @@ sol.core.nl.i <- function(params, init.guess, An, Bn, Cn, def, i){
 
   x0 <- init.guess[i,]
       # Extract x0
-  n <- nrow(init.guess)
+  nn <- nrow(init.guess)
       # The number of states
   fn <- function(x){
   # The function for which we want to find the root
