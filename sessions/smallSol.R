@@ -71,11 +71,20 @@ plot.z( rep(0,length(params$R)), d.init, params ) #, xlim=c(0,3e-03), ylim=c(0,3
 plot.z.d( rep(0,length(params$R)), d.init, params ) #, xlim=c(0,3e-03), ylim=c(0,3e-03) )
 
 params$it <- 30
-params$tol <- 0.1
+params$tol <- 0.25
 sol.s <- sol.search(params, plot.on = TRUE)
 
+params$surp.sd <- .075 # Try increasing the variance
+sol.t <- sol.search(params, cbind( sol.s$p, sol.s$d ), plot.on = TRUE)
+params$surp.sd <- .1 # This is about the highest this will go
+sol.u <- sol.search(params, cbind( sol.t$p, sol.t$d ), plot.on = TRUE)
+
+
 params$tol <- 1e-6
-sol <- sol.wrapper( params, plot.on=T, init.guess = cbind( sol.s$p, sol.s$d ) )
+sol <- sol.wrapper( params, plot.on=T, init.guess = cbind( sol.u$p, sol.u$d ) )
+plot.surp(params, x.lim = c(0, 1.5 * max(sol$d) ) )
+abline(v=sol$d,lty=2)
+points( dta[,c('cnlb_gdp_lag','pb_gdp')], col=dta$x )
 plot.z( sol$p, sol$d, sol$params , xlim=c(0,1e-04), ylim=c(0,1e-04) )
 plot.z( sol$p, sol$d, sol$params )
 
