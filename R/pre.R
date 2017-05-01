@@ -36,7 +36,7 @@ sol.nonstoch.poly <- function(params){
         # Coefficients of the derivative
     re.rt.d <- 1 / params$v.s.coeff[1] * z.d %*% sapply(re.rt, function(x) x ^ (1:(m-2)) )
         # The derivative at the real roots
-    out[i] <- max( re.rt[re.rt.d<0] ) * params$v.s.coeff[1]
+    out[i] <- max( max( re.rt[re.rt.d<0] ) * params$v.s.coeff[1], 0 )
   }
   return(out)
 }

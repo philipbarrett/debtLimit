@@ -33,7 +33,7 @@ sol.search.i <- function(params, init.guess, i, An, Bn, Cn, def, tol=1e-05, maxi
     err <- max( abs( z.2[i,] - c(0,1) ) )
         # The error
     if( it > 1 ){
-      if( err > err.old ) break()
+      # if( err > err.old ) break()
     }
         # Break out if the difference is increasing - usually a bad sign.
     p <- p.new
@@ -57,32 +57,36 @@ sol.search <- function(params, init.guess=NULL,
 
   nn <- length(params$R)
   maxit <- if(is.null(params$it)) 10 else params$it
-  tol <- if(is.null(params$tol)) 1e-02 else params$tol
+  tol.fp <- if(is.null(params$tol.fp)) 1e-04 else params$tol.fp
+  tol.grad <- if(is.null(params$tol.grad)) 2e-02 else params$tol.grad
+      # Try to get the FP very close.  The gradient can come later.
 
-  it <- 0
-  err <- 2 * tol
   p.guess <- init.guess[,1]
   d.guess <- init.guess[,2]
       # Initiate the candidate solution and the loop variables
-  while( ( err > tol ) && it < maxit ){
-    it <- it + 1
+  for( it in 1:maxit ){
     message("it = ", it )
-    err <- 0
     for( i in 1:nn ){
       guess <- cbind(p.guess, d.guess)
       search <- sol.search.i( params, guess, i, An, Bn, Cn, def )
       p.guess[i] <- search$p[i]
       d.guess[i] <- search$d[i]
-      err <- max( abs( zed_2( p.guess, d.guess, params, An, Bn, Cn, def ) -
-                         matrix( c(0,1), ncol=2, nrow=nn, byrow=TRUE ) ) )
+      err <- zed_2( p.guess, d.guess, params, An, Bn, Cn, def ) -
+                         matrix( c(0,1), ncol=2, nrow=nn, byrow=TRUE )
           # Compute the error
+      err.fp <- max(abs(err[,1]))
+      err.grad <- max(abs(err[,2]))
+          # Split into errors on fixed point and gradient
       if( plot.on )
         plot.z(p.guess, d.guess, params, An, Bn, Cn, def,
                xlim=c(0,2*p.guess[i]), ylim=c(0,2*p.guess[i]) )
-      if( err < tol ) i <- nn + 1
+      if( err.fp < tol.fp && err.grad < tol.grad ){
+        i <- nn + 1
+        it <- maxit + 1
+      }
           # Break out if the error looks good
     }
-    message( 'err = ', err )
+    message( 'err.fp = ', round(err.fp,4), '  err.grad = ', round(err.grad,4) )
   }
   err <- zed_2( p.guess, d.guess, params, An, Bn, Cn, def ) -
                      matrix( c(0,1), ncol=2, nrow=nn, byrow=TRUE )

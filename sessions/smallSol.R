@@ -8,9 +8,10 @@ rg.dta <- rg.read( cty )
 # dta <- subset(dta, date <= "2015-01-01")
 est <- var.rg.est(rg.dta)
 disc <- var.discretize( est, n.pts = 1, n.dirs=4 )
+# disc <- var.discretize( est, n.pts = 1, n.dirs=16 )
 gkmoq.init <- nrow(disc$X)
     # An ok small discretization
-plot( disc$X, cex=disc$m*100 )
+plot( disc$X, cex=disc$m*15, pch=16 )
 interp <- var.data.interp( disc, rg.dta )
 rg.dta$x <- interp$s.idx
 rg.dta$x.gth <- interp$dta.disc[,'gth']
@@ -59,32 +60,44 @@ def <- matrix(0,1,1)
 # d.init <- rep( max( sol.nonstoch(params) ), length( params$R ) )
 d.init <- sol.nonstoch(params)
 
-for( i in 1:length(params$R) ){
-  xx <- sol.search.i( params, cbind(1e-05,d.init), i, An, Bn, Cn, def,
-                    print.level = 1 )
-  plot.z( xx$p, xx$d, params, An, Bn, Cn, def, xlim=c(0,2*xx$p[i]), ylim=c(0,2*xx$p[i]) )
-}
-
-
+# for( i in 1:length(params$R) ){
+#   xx <- sol.search.i( params, cbind(1e-05,d.init), i, An, Bn, Cn, def,
+#                     print.level = 1 )
+#   plot.z( xx$p, xx$d, params, An, Bn, Cn, def, xlim=c(0,2*xx$p[i]), ylim=c(0,2*xx$p[i]) )
+# }
 
 plot.z( rep(0,length(params$R)), d.init, params ) #, xlim=c(0,3e-03), ylim=c(0,3e-03) )
 plot.z.d( rep(0,length(params$R)), d.init, params ) #, xlim=c(0,3e-03), ylim=c(0,3e-03) )
 
 params$it <- 30
 params$tol <- 0.25
-sol.s <- sol.search(params, plot.on = TRUE)
+sol.s <- sol.search(params) #, plot.on = TRUE)
 
 params$surp.sd <- .075 # Try increasing the variance
-sol.t <- sol.search(params, cbind( sol.s$p, sol.s$d ), plot.on = TRUE)
+sol.t <- sol.search(params, cbind( sol.s$p, sol.s$d )) #, plot.on = TRUE)
 params$surp.sd <- .1 # This is about the highest this will go
-sol.u <- sol.search(params, cbind( sol.t$p, sol.t$d ), plot.on = TRUE)
+sol.u <- sol.search(params, cbind( sol.t$p, sol.t$d )) #, plot.on = TRUE)
 
 
 params$tol <- 1e-6
-sol <- sol.wrapper( params, plot.on=T, init.guess = cbind( sol.u$p, sol.u$d ) )
+sol <- sol.wrapper( params, init.guess = cbind( sol.u$p, sol.u$d ) ) #, plot.on=T )
 plot.surp(params, x.lim = c(0, 1.5 * max(sol$d) ) )
 abline(v=sol$d,lty=2)
 points( dta[,c('cnlb_gdp_lag','pb_gdp')], col=dta$x )
-plot.z( sol$p, sol$d, sol$params , xlim=c(0,1e-04), ylim=c(0,1e-04) )
+plot.z( sol$p, sol$d, sol$params , xlim=c(0,2e-04), ylim=c(0,2e-04) )
 plot.z( sol$p, sol$d, sol$params )
+
+plot(dta$date, dta$cnlb_gdp, type='l', lwd=2, ylim=c(0,max(sol$d)))
+lines(dta$date, sol$d[dta$x], col='blue', lwd=2, lty=2 )
+
+params.no.RG.var <- params
+params.no.RG.var$R <- rep( sum(params$R * disc$m), length(params$R) )
+params.no.RG.var$G <- rep( sum(params$G * disc$m), length(params$G) )
+sol.no.RG.var.init <- sol.search( params.no.RG.var ) #, plot.on=T )
+sol.no.RG.var <- sol.wrapper( params.no.RG.var, # plot.on=T,
+                              init.guess = cbind( sol.no.RG.var.init$p, sol.no.RG.var.init$d ) )
+
+plot.z( sol.no.RG.var$p, sol.no.RG.var$d, sol.no.RG.var$params, An, Bn, Cn, def,
+        xlim=c( 0, 2*max(sol.no.RG.var$p)), ylim=c( 0, 2*max(sol.no.RG.var$p)) )
+plot.z( sol.no.RG.var$p, sol.no.RG.var$d, sol.no.RG.var$params, An, Bn, Cn, def )
 
