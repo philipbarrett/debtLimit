@@ -4,8 +4,9 @@ library(debtLimits)
 dta <- rg.read( 'USA' )
 # dta <- subset(dta, date <= "2015-01-01")
 est <- var.rg.est(dta)
-disc <- var.discretize( est, n.pts = 5, n.dirs=12 )
-# disc <- var.discretize( est, n.pts = 1, n.dirs=4 )
+
+# disc <- var.discretize( est, n.pts = 5, n.dirs=12 )
+disc <- var.discretize( est, n.pts = 1, n.dirs=4 )
 
 n.sim <- 1e6
 n.reg <- 1e5

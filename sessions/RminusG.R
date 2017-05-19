@@ -10,6 +10,7 @@ library(ggplot2)
 library(reshape2)
 library(lubridate)
 library(scales)
+library(xtable)
 
 rfr <- read.csv('data/riskfreerates.csv')
 gth <- read.csv('data/growthrates.csv')
@@ -56,17 +57,36 @@ decades.mu.melt <- melt(decades.mu,id="Decade", variable.name='Country', value.n
 g1 <- ggplot(decades.mu.melt,aes(x=Decade,y=`R minus G`,colour=Country,group=Country)) +
           geom_line(size=1) + ggtitle('Decadal means')
 
-rminusg.oecd <- rminusg[,-ncol(rminusg)]
+rminusg.g7 <- rminusg[,-ncol(rminusg)]
     # Drop Sweden
-rminusg.oecd[,-1] <- rminusg.oecd[,-1] / 4
-    # De-annualize
-decades.mu.oecd <- aggregate( rminusg.oecd[,-1], list(cut(rminusg.oecd$DATE, cuts, labs )), mean, na.rm=TRUE )
-names(decades.mu.oecd)[1] <- 'Decade'
-decades.mu..oecd.melt <- melt(decades.mu.oecd,id="Decade", variable.name='Country',
+rminusg.g7[,-1] <- rminusg.g7[,-1] #/ 4
+    # De-annualize. NOPE
+rminusg.g7 <- subset( rminusg.g7, DATE >= 01-01-1960 )
+    # Drop the 1950a
+print( mean(unlist(rminusg.g7[,-1]), na.rm=T ) )
+
+decades.mu.g7 <- aggregate( rminusg.g7[,-1], list(cut(rminusg.g7$DATE, cuts, labs )), mean, na.rm=TRUE )
+names(decades.mu.g7)[1] <- 'Decade'
+decades.mu.g7.melt <- melt(decades.mu.g7,id="Decade", variable.name='Country',
                               value.name='Interest growth differential')
-g1.oecd <- ggplot(decades.mu..oecd.melt,aes(x=Decade,y=`Interest growth differential`,colour=Country,group=Country)) +
-  geom_line(size=1) %+ ggtitle('Decadal means')
-ggsave('~/Dropbox/2017/research/debtLimits/charts/rmg.pdf', g1.oecd)
+g1.g7 <- ggplot(decades.mu.g7.melt,aes(x=Decade,y=`Interest growth differential`,color=Country,group=Country)) +
+  geom_line(size=1) + theme_classic() + theme(axis.title.y=element_blank(),
+                                              axis.title.x=element_blank() ) # + ggtitle('Decadal means')
+ggsave('~/Dropbox/2017/research/debtLimits/charts/rmg.pdf', g1.g7)
+
+sd.out <- function( x, sd.mult = 3, ... ){
+# Computes standard deviation without outliers
+  sd( x[ abs( x - mean(x, na.rm = TRUE) ) < sd.mult * sd(x, na.rm = TRUE) ], na.rm = TRUE )
+}
+
+decades.sd.g7 <- aggregate( rminusg.g7[,-1], list(cut(rminusg.g7$DATE, cuts, labs )), sd, na.rm=TRUE )
+decades.sd.out.g7 <- aggregate( rminusg.g7[,-1], list(cut(rminusg.g7$DATE, cuts, labs )), sd.out, na.rm=TRUE )
+names(decades.sd.out.g7)[1] <- ''
+decades.sd.out.g7$Average <- apply( decades.sd.out.g7[,-1], 1, mean, na.rm=TRUE )
+print( xtable(decades.sd.out.g7, digits = 1, label = 'tab:rmg_sd',
+              caption = 'Decadal standard deviation of interest-growth differentials in six advanced economies 1960-2016' ),
+       file = '~/Dropbox/2017/research/debtLimits/charts/rmg_sd.tex', include.rownames=FALSE )
+
 
 decades.sd <- aggregate( rminusg[,-1], list(cut(rminusg$DATE, cuts, labs )), sd, na.rm=TRUE)
 names(decades.sd)[1] <- 'Decade'
