@@ -47,35 +47,35 @@ d.grid <- d_grid_fn(sol.w$d, params$surp.sd, x_sd_mult = 2, n_pts=15 )
 Q <- Q_init( d.grid, sol.w$d, params$R )
 
 ## 4. Solve for next-period debt ##
-d_prime( 0, sol.w$d[1] - 10, sol.w$d, 1 / params$R[1], Q, d.grid, params$G, params$lambda,
+d_prime( 0, sol.w$d[1] - 10, sol.w$d, 1 / params$R[1], Q, d.grid, params$G, params$s.shift, params$lambda,
          e.grid, params$v.s.coeff, params$tri, matrix(0), FALSE, print_level=2 )
-microbenchmark( d.prime <- d_prime( 0, sol.w$d[1] - 10, sol.w$d, 1 / params$R[1], Q, d.grid, params$G, params$lambda,
+microbenchmark( d.prime <- d_prime( 0, sol.w$d[1] - 10, sol.w$d, 1 / params$R[1], Q, d.grid, params$G, params$s.shift,params$lambda,
                                     e.grid, params$v.s.coeff, params$tri, matrix(0), FALSE, print_level=0 ) )
     # ~ 25ms
 
 ## 5. Solve for expected continuation debt prices ##
-q.e <- q_e( d.grid[13], sol.w$d, 1 / params$R, Q, d.grid, params$G, params$lambda,
+q.e <- q_e( d.grid[13], sol.w$d, 1 / params$R, Q, d.grid, params$G, params$s.shift, params$lambda,
             e.grid, params$v.s.coeff, params$tri, matrix(0), FALSE, params$trans, print_level=1 )
-microbenchmark(q_e( sol.w$d[4] + 2, sol.w$d, 1 / params$R, Q, d.grid, params$G, params$lambda,
+microbenchmark(q_e( sol.w$d[4] + 2, sol.w$d, 1 / params$R, Q, d.grid, params$G, params$s.shift, params$lambda,
                    e.grid, params$v.s.coeff, params$tri, matrix(0), FALSE, params$trans, print_level=0 ))
     # ~ 60ms
 
 ## 6. Solve for actual debt price ##
 
 qq <- q_hat_fn( d.grid[13], rep(.01,nn), sol.w$d, 1 / params$R, Q, d.grid, params$R,
-                 params$G, params$lambda, params$phi, e.grid, params$v.s.coeff, params$tri,
+                 params$G, params$s.shift, params$lambda, params$phi, e.grid, params$v.s.coeff, params$tri,
                  matrix(0), FALSE, params$trans, print_level=1 )
 microbenchmark( qq <- q_hat_fn( d.grid[2], rep(.02,nn), sol.w$d, 1 / params$R, Q, d.grid, params$R,
-                 params$G, params$lambda, params$phi, e.grid, params$v.s.coeff, params$tri,
+                 params$G, params$s.shift, params$lambda, params$phi, e.grid, params$v.s.coeff, params$tri,
                  matrix(0), FALSE, params$trans, print_level=0 ) )
     # ~94ms
-QQ <- q_hat_mat( matrix(.01,dim(Q)[1],dim(Q)[2]), sol.w$d, Q, Q, d.grid, params$R,params$G, params$lambda,
-                 params$phi, e.grid, params$v.s.coeff, params$tri,
+QQ <- q_hat_mat( matrix(.01,dim(Q)[1],dim(Q)[2]), sol.w$d, Q, Q, d.grid, params$R,params$G,
+                 params$s.shift, params$lambda, params$phi, e.grid, params$v.s.coeff, params$tri,
                  matrix(0), FALSE, params$trans, 2 )
 microbenchmark(QQ <-
-         q_hat_mat( matrix(.01,dim(Q)[1],dim(Q)[2]), sol.w$d, Q, Q, d.grid, params$R,params$G, params$lambda,
-                                params$phi, e.grid, params$v.s.coeff, params$tri,
-                                matrix(0), FALSE, params$trans, FALSE ))
+         q_hat_mat( matrix(.01,dim(Q)[1],dim(Q)[2]), sol.w$d, Q, Q, d.grid, params$R,params$G,
+                    params$s.shift, params$lambda, params$phi, e.grid, params$v.s.coeff,
+                    params$tri, matrix(0), FALSE, params$trans, FALSE ))
     # .002s
 
 ## 7. Now just solve and plot ##
@@ -117,13 +117,9 @@ plot.err(err.out.b)
     # And this doesn't quite work! :) Which is good!
 
 ## Try to improve it next:
-l.ABC <- ABC( sol.out, params )
+# l.ABC <- ABC( sol.out, params )
 # sol.in.2 <- sol.wrapper(params, An=l.ABC$An, Bn=l.ABC$Bn, Cn=l.ABC$Cn  )
 #    # No bueno
-
-
-
-
 
 
 

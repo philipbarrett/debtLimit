@@ -20,7 +20,7 @@ var.table(est$VAR, file='~/Dropbox/2017/research/debtLimits/paper/usvar_tab.tex'
 
 pdf('~/Dropbox/2017/research/debtLimits/charts/rg_us_disc.pdf')
 plot( disc$X, cex=disc$m*15, pch=16, xlab='Quarterly nominal growth rate',
-      ylab='Quarterly nominal interst rate' )
+      ylab='Quarterly nominal interest rate' )
 abline(0,1,lty=2)
 legend('topright', 'R=G', bty='n', lty=2)
 dev.off()

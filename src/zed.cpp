@@ -254,6 +254,309 @@ arma::mat zed_2_ana( arma::vec p, arma::vec d, List params, arma::vec An,
   return out ;
 }
 
+// [[Rcpp::export]]
+arma::vec zed_d_0( arma::vec p, arma::vec d, List params, int print_level ) {
+// Computes the fixed point function when lambda=0
+
+  /** 1. Extract parameters **/
+  mat trans = params["trans"] ;
+  vec R = params["R"] ;
+  vec G = params["G"] ;
+  vec shift = params["s.shift"] ;
+  vec v_s_coeff = params["v.s.coeff"] ;
+  double phi = params["phi"] ;
+  double surp_sd = params["surp.sd"] ;
+  double lambda = params["lambda"] ;
+  int n = R.n_elem ;
+  bool tri = params["tri"] ;
+  bool d_tri = params["d.tri"] ;
+  std::string cont_type = params["cont.type"] ;
+
+  /** 2. Create the vector of bond prices consistent with default probabilities **/
+  vec q = ( 1 - p ) / ( R - phi * p ) ;
+  // Candidate debt price at the boundary
+
+    /** 3. Create threshold values for the surplus shock **/
+  vec surp = ones(n) ;
+  // The surplus vector.  Depends on debt in the preceding period and grwoth in this.
+  mat H = mat(n,n) ;
+  mat p_H = mat(n,n) ;
+  // The matrix H of surplus shocks required to hit the debt limit and their
+  // corresponding probabilities
+
+  for( int i = 0 ; i < n ; i++ ){
+    surp = v_surp( d(i) * ones(n), v_s_coeff, shift, tri ) ;
+    // The surplus vector
+    for( int j = 0 ; j < n ; j++ ){
+      H(i,j) = d(i) / ( q(i) * G(j) ) - d(j) - surp(j) ;
+      // Market value of new debt in next period is # of old obligations *
+      // current market price.
+      if( d_tri ){
+        double ub = surp_sd * std::sqrt( 6.0 ) ;
+        // Var = 18 * (Upper bound) ^ 2 (symmetric triangle case)
+        p_H(i,j) = p_triangle( H(i,j), -ub, 0, ub ) ;
+      }else{
+        p_H(i,j) = R::pnorm( H(i,j), 0, surp_sd, 1, 0 ) ;
+      }
+      // Fill these in
+    }
+  }
+
+  /** 4. Create the output vectors **/
+  vec z = zeros(n) ;
+  for( int i=0 ; i < n ; i++ ){
+    z(i) = dot( trans.row(i), p_H.row(i) ) ;
+  }
+  // Create the output as the expectation of the default probabilities over the states.
+
+  if( print_level > 0 ){
+    Rcout << std::setw(3) << "i" << std::setw(3) << "j"
+          << std::setw(5) << "p" << std::setw(8) << "d"
+          << std::setw(10) << "q" << std::setw(8) << "R" << std::setw(8) << "G"
+          << std::setw(10) << "surp" << std::setw(10) << "H" << std::setw(10) << "p_H" << std::endl ;
+    for( int i = 0 ; i < n ; i++ ){
+      for( int j = 0 ; j < n ; j++ ){
+        Rcout << std::setw(3) << i << std::setw(3) << j
+              << std::setprecision(4) << std::setw(5) << p(i) << std::setw(8) << d(i)
+              << std::setw(10) << q(i) << std::setw(8) << R(i) << std::setw(8) << G(j)
+              << std::setw(10) << surp(j) << std::setw(10) << H(i,j) << std::setw(10) << p_H(i,j) << std::endl ;
+      }
+    }
+  }
+  return z ;
+}
+
+// [[Rcpp::export]]
+double zed_d_0_i( double p, arma::vec d, List params, int i, int print_level ) {
+  // Computes the fixed point function when lambda=0
+
+  /** 1. Extract parameters **/
+  mat trans = params["trans"] ;
+  vec R = params["R"] ;
+  vec G = params["G"] ;
+  vec shift = params["s.shift"] ;
+  vec v_s_coeff = params["v.s.coeff"] ;
+  double phi = params["phi"] ;
+  double surp_sd = params["surp.sd"] ;
+  double lambda = params["lambda"] ;
+  int n = R.n_elem ;
+  bool tri = params["tri"] ;
+  bool d_tri = params["d.tri"] ;
+
+  /** 2. Create the vector of bond prices consistent with default probabilities **/
+  double q = ( 1 - p ) / ( R(i) - phi * p ) ;
+  // Candidate debt price at the boundary
+
+  /** 3. Create threshold values for the surplus shock **/
+  vec surp = v_surp( d(i) * ones(n), v_s_coeff, shift, tri ) ;
+      // The surplus vector.  Depends on debt in the preceding period and grwoth in this.
+  vec H = zeros(n) ;
+  vec p_H = zeros(n) ;
+  // The matrix H of surplus shocks required to hit the debt limit and their
+  // corresponding probabilities
+
+  for( int j = 0 ; j < n ; j++ ){
+    H(j) = d(i) / ( q * G(j) ) - d(j) - surp(j) ;
+        // Market value of new debt in next period is # of old obligations *
+        // current market price.
+    if( d_tri ){
+      double ub = surp_sd * std::sqrt( 6.0 ) ;
+          // Var = 18 * (Upper bound) ^ 2 (symmetric triangle case)
+      p_H(j) = p_triangle( H(j), -ub, 0, ub ) ;
+    }else{
+      p_H(j) = R::pnorm( H(j), 0, surp_sd, 1, 0 ) ;
+    }
+    // Fill these in
+  }
+
+  /** 4. Create the output vectors **/
+  double z = dot( trans.row(i), p_H ) ;
+      // Create the output as the expectation of the default probabilities over the states.
+
+  if( print_level > 0 ){
+    Rcout << std::setw(3) << "i" << std::setw(3) << "j"
+          << std::setw(5) << "p" << std::setw(8) << "d"
+          << std::setw(10) << "q" << std::setw(8) << "R" << std::setw(8) << "G"
+          << std::setw(10) << "surp" << std::setw(10) << "H" << std::setw(10) << "p_H" << std::endl ;
+    for( int i = 0 ; i < n ; i++ ){
+      for( int j = 0 ; j < n ; j++ ){
+        Rcout << std::setw(3) << i << std::setw(3) << j
+              // << std::setprecision(4) << std::setw(5) << p(i) << std::setw(8) << d(i)
+              // << std::setw(10) << q(i) << std::setw(8) << R(i) << std::setw(8) << G(j)
+              << std::setw(10) << surp(j) << std::setw(10) << H(i,j) << std::setw(10) << p_H(i,j) << std::endl ;
+      }
+    }
+  }
+  return z ;
+}
+
+// [[Rcpp::export]]
+arma::mat zed_2_ana_0( arma::vec p, arma::vec d, List params){
+// Computes (z,z.p) analytically with lambda=0
+
+  /** 1. Extract parameters **/
+  mat trans = params["trans"] ;
+  vec R = params["R"] ;
+  vec G = params["G"] ;
+  vec shift = params["s.shift"] ;
+  vec v_s_coeff = params["v.s.coeff"] ;
+  double phi = params["phi"] ;
+  double surp_sd = params["surp.sd"] ;
+  double lambda = params["lambda"] ;
+  int n = R.n_elem ;
+  bool tri = params["tri"] ;
+  bool d_tri = params["d.tri"] ;
+  std::string cont_type = params["cont.type"] ;
+
+  /** 2. Create the vector of bond prices consistent with default probabilities **/
+  vec q = ( 1 - p ) / ( R - phi * p ) ;
+      // Current period debt price
+  vec q_dp = - 1 / ( R - phi * p ) + phi * ( 1 - p ) / ( ( R - phi * p ) % ( R - phi * p ) ) ;
+      // The derivative of q w.r.t. p
+
+  /** 3. Create threshold values for the surplus shock **/
+  vec surp = ones(n) ;
+      // The surplus vector.  Depends on debt in the preceding period, but growth in this.
+  mat H = zeros(n,n) ;
+  mat p_H = zeros(n,n) ;
+  mat p_H_dp = zeros(n,n) ;
+  mat H_dp = zeros(n,n) ;
+      // The matrix H of surplus shocks required to hit the debt limit, their
+      // corresponding probabilities, and the derivatives w.r.t. p
+
+  for( int i = 0 ; i < n ; i++ ){
+    surp = v_surp( d(i) * ones(n), v_s_coeff, shift, tri ) ;
+        // The surplus vector
+    for( int j = 0 ; j < n ; j++ ){
+      H(i,j) = d(i) / ( q(i) * G(j) ) - d(j) - surp(j) ;
+          // Budget constraint,
+      H_dp(i,j) = - d(i) / ( q(i) * G(j) ) * q_dp(i) / q(i) ;
+          // The derivative of H w.r.t. p.
+      p_H(i,j) = R::pnorm( H(i,j), 0, surp_sd, 1, 0 ) ;
+      p_H_dp(i,j) = R::dnorm( H(i,j), 0, surp_sd, 0 ) ;
+
+      if( d_tri ){
+        double ub = surp_sd * std::sqrt( 6.0 ) ;
+        // Var = 18 * (Upper bound) ^ 2 (symmetric triangle case)
+        p_H(i,j) = p_triangle( H(i,j), -ub, 0, ub ) ;
+        p_H_dp(i,j) = d_triangle( H(i,j), -ub, 0, ub ) ;
+      }else{
+        p_H(i,j) = R::pnorm( H(i,j), 0, surp_sd, 1, 0 ) ;
+        p_H_dp(i,j) = R::dnorm( H(i,j), 0, surp_sd, 0 ) ;
+      }
+      // Fill these in too
+    }
+  }
+
+  mat H_temp = H_dp % p_H_dp ;
+
+  // mat q_dp2 = q_d_p( R, p, trans, lambda, phi, n, cont_type, "num", G, An, Bn, def ) ;
+  // Rcout << "trans:\n" << trans << std::endl ;
+  // Rcout << "H:\n" << H << std::endl ;
+  // Rcout << "H_temp:\n" << H_temp << std::endl ;
+  // Rcout << "p_H:\n" << p_H << std::endl ;
+  // Rcout << "H_dp:\n" << H_dp << std::endl ;
+  // Rcout << "p_H_dp:\n" << p_H_dp << std::endl ;
+  // Rcout << "q_dp:\n" << q_dp << std::endl ;
+  // Rcout << "q_dp2:\n" << q_dp2 << std::endl ;
+  // MOAR TESTS THEN DELETE
+
+  /** 4. Create the output vectors **/
+  vec z = zeros(n) ;
+  vec z_p = zeros(n) ;
+  for( int i=0 ; i < n ; i++ ){
+    z(i) = dot( trans.row(i), p_H.row(i) ) ;
+    z_p(i) = dot( trans.row(i), H_temp.row(i) ) ;
+  }
+  // Create the output as the expectation of the default probabilities over the states.
+
+  mat out = zeros(n,2) ;
+  // Initialize the output
+  out.col(0) = z ;
+  out.col(1) = z_p ;
+  // Populate the output
+  return out ;
+}
+
+// [[Rcpp::export]]
+arma::vec zed_2_ana_0_i( double p, arma::vec d, List params, int i ){
+  // Computes (z,z.p) analytically with lambda=0
+
+  /** 1. Extract parameters **/
+  mat trans = params["trans"] ;
+  vec R = params["R"] ;
+  vec G = params["G"] ;
+  vec shift = params["s.shift"] ;
+  vec v_s_coeff = params["v.s.coeff"] ;
+  double phi = params["phi"] ;
+  double surp_sd = params["surp.sd"] ;
+  double lambda = params["lambda"] ;
+  int n = R.n_elem ;
+  bool tri = params["tri"] ;
+  bool d_tri = params["d.tri"] ;
+
+  /** 2. Create the vector of bond prices consistent with default probabilities **/
+  double q = ( 1 - p ) / ( R(i) - phi * p ) ; ;
+      // Current period debt price
+  double q_dp = - 1 / ( R(i) - phi * p ) + phi * ( 1 - p ) / ( pow( R(i) - phi * p, 2 ) ) ;
+      // The derivative of q w.r.t. p
+
+  /** 3. Create threshold values for the surplus shock **/
+  vec surp = ones(n) ;
+      // The surplus vector.  Depends on debt in the preceding period, but growth in this.
+  vec H = zeros(n) ;
+  vec p_H = zeros(n) ;
+  vec p_H_dp = zeros(n) ;
+  vec H_dp = zeros(n) ;
+  // The matrix H of surplus shocks required to hit the debt limit, their
+  // corresponding probabilities, and the derivatives w.r.t. p
+
+  surp = v_surp( d(i) * ones(n), v_s_coeff, shift, tri ) ;
+    // The surplus vector
+  for( int j = 0 ; j < n ; j++ ){
+    H(j) = d(i) / ( q * G(j) ) - d(j) - surp(j) ;
+    // Budget constraint,
+    H_dp(j) = - d(i) / ( q * G(j) ) * q_dp / q ;
+        // The derivative of H w.r.t. p.
+    if( d_tri ){
+      double ub = surp_sd * std::sqrt( 6.0 ) ;
+      // Var = 18 * (Upper bound) ^ 2 (symmetric triangle case)
+      p_H(j) = p_triangle( H(j), -ub, 0, ub ) ;
+      p_H_dp(j) = d_triangle( H(j), -ub, 0, ub ) ;
+    }else{
+      p_H(j) = R::pnorm( H(j), 0, surp_sd, 1, 0 ) ;
+      p_H_dp(j) = R::dnorm( H(j), 0, surp_sd, 0 ) ;
+    }
+    // Fill these in too
+  }
+
+  mat H_temp = H_dp % p_H_dp ;
+
+  /** 4. Create the output vectors **/
+  double z = dot( trans.row(i), p_H ) ;
+  double z_p = dot( trans.row(i), H_dp % p_H_dp ) ;
+      // Create the output as the expectation of the default probabilities over the states.
+
+  vec out = zeros(2) ;
+  // Initialize the output
+  out(0) = z ;
+  out(1) = z_p ;
+    // Populate the output
+
+  return out ;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 // // [[Rcpp::export]]
 // arma::mat zed_2_jac_i( double p, int i_eta, double d, arma::vec d_bar, List params ){

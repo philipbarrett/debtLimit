@@ -6,7 +6,8 @@
 # Philip Barrett, Washington DC
 #####################################################################
 
-plot.surp <- function(params, non.stoch=TRUE, x.lim=c(0,200), ... ){
+plot.surp <- function(params, non.stoch=TRUE, x.lim=c(0,200), vert=FALSE,
+                      leg=TRUE, ... ){
 # Plots the surplus function
   d <- seq( from=x.lim[1], to=x.lim[2], by = 1 )
       # X values
@@ -23,13 +24,13 @@ plot.surp <- function(params, non.stoch=TRUE, x.lim=c(0,200), ... ){
   for( i in 1:ncol(surps) ){
     lines( d, surps[,i], lwd=2, col=i )
     if( non.stoch ){
-      sapply( 1:ncol(surps), function(j) abline( 0, params$R[i] - params$G[j], lwd=.5, col=i, lty=2 ) )
+      # sapply( 1:ncol(surps), function(j) abline( 0, params$R[i] - params$G[j], lwd=.5, col=i, lty=2 ) )
       abline( 0, params$R[i] - params$G[i], lwd=1, col=i )
     }
   }
-  legend( 'topright', paste0( 'G = ', round( params$G, 3 ) ), lwd=2, col=1:i, bty='n' )
+  if(leg) legend( 'topright', paste0( 'G = ', round( params$G, 3 ) ), lwd=2, col=1:i, bty='n' )
   abline(h=0)
-  if( non.stoch ){
+  if( vert ){
     abline( v=sol.nonstoch(params), lwd=.5, col=1:length(params$R) )
   }
 }
@@ -46,7 +47,8 @@ plot.z <- function( p, d, params, An=c(0), Bn=c(0), Cn=c(0), def=matrix(0), ... 
   par(mfrow=c(1,1))
 }
 
-plot.z.i <- function( p, d, params, i, An, Bn, Cn, def, global, ylim=NULL, ... ){
+plot.z.i <- function( p, d, params, i, An, Bn, Cn, def, global, ylim=NULL,
+                      cex.lab=1, cex.axis=1, cex.main=1, ... ){
 # Plots the z function vs. p[i] in state i
   p.seq <- c( seq(0,1e-3,by=1e-5), seq(1e-3,1e-2,by=1e-4), seq(1e-2,1e-1,by=1e-3), seq(1e-1,1,by=1e-2) )
       # The x-values
@@ -57,8 +59,9 @@ plot.z.i <- function( p, d, params, i, An, Bn, Cn, def, global, ylim=NULL, ... )
   } ) )
       # The y values
   # if( !exists('ylim')) ylim <- c(0,1)
-  plot( p.seq, y.vals[,1], lwd=2, xlab='p', ylab='z', main=paste0( 'i = ', i ),
-        type='l', ylim=ylim, ... )
+  plot( p.seq, y.vals[,1], lwd=2, xlab='p', ylab='z',
+        type='l', ylim=ylim, main=paste0( 'i = ', i ),
+        cex.lab=cex.lab, cex.axis=cex.axis, cex.main=cex.main, ... )
   abline( 0, 1, lty=2 )
   abline( v=p[i], lty=2 )
   abline( h=p[i], lty=2 )
@@ -72,7 +75,7 @@ plot.z.i <- function( p, d, params, i, An, Bn, Cn, def, global, ylim=NULL, ... )
   plot( p.seq, y.vals[,2], type = "l", col='red', axes = FALSE, bty = "n",
         xlab = "", ylab = "", ylim=y.range, ... )
       # Plot the derivative
-  axis(side=4, at = pretty(y.range))
+  axis(side=4, at = pretty(y.range), cex.lab=cex.lab, cex.axis=cex.axis )
   # mtext("z.p", side=4, line=3)
   abline( h=1, lty=2, col='red' )
       # Axis labelling
@@ -92,7 +95,7 @@ plot.z.d <- function( p, d, params, An=c(0), Bn=c(0), Cn=c(0), def=matrix(0),
   par(mfrow=c(1,1))
 }
 
-plot.z.d.i <- function( p, d, params, i, An, Bn, Cn, def, d.range=c(0,200), global, ... ){
+plot.z.d.i <- function( p, d, params, i, An, Bn, Cn, def, d.range=c(0,200), global, lwd=2, mgp=NULL, ... ){
 # Plots the z function vs. d[i] in state i
   d.seq <- seq(d.range[1], d.range[2],length.out=1000)
       # The x-values
@@ -102,7 +105,7 @@ plot.z.d.i <- function( p, d, params, i, An, Bn, Cn, def, d.range=c(0,200), glob
     return( zed_2(p, this.d, params, An, Bn, Cn, def )[i,] )
   } ) )
   # The y values
-  plot( d.seq, y.vals[,1], lwd=2, xlab='d', ylab='z', main=paste0( 'i = ', i ), type='l', ... )
+  plot( d.seq, y.vals[,1], lwd=lwd, xlab='d', ylab='z', main=paste0( 'i = ', i ), type='l', mgp=mgp, ... )
   # abline( 0, 1, lty=2 )
   abline( v=d[i], lty=2 )
   abline( h=p[i], lty=2 )
@@ -114,9 +117,9 @@ plot.z.d.i <- function( p, d, params, i, An, Bn, Cn, def, d.range=c(0,200), glob
                 min( max(y.vals[,2], na.rm = TRUE ), 10 ) )
       # The y limits for the derivative
   plot( d.seq, y.vals[,2], type = "l", col='red', axes = FALSE, bty = "n",
-        xlab = "", ylab = "", ylim=y.range )
+        xlab = "", ylab = "", ylim=y.range, mgp=mgp )
       # Plot the derivative
-  axis(side=4, at = pretty(y.range))
+  axis(side=4, at = pretty(y.range), mgp=mgp-c(0,1,0) )
       # mtext("z.p", side=4, line=3)
   abline( h=1, lty=2, col='red' )
       # Axis labelling
@@ -164,7 +167,7 @@ plot.q.i <- function( p, params, i, An=NULL, def=NULL ){
 }
 
 
-plot.sol <- function( sol ){
+plot.sol <- function( sol, ... ){
 # Plots the outer solution
 
   par(mfrow=c(2,2))
@@ -173,7 +176,7 @@ plot.sol <- function( sol ){
 
   # Plot Q
   plot( range(sol$d.grid), range(sol$Q), type='n', xlab='Debt value', ylab='',
-        main='Debt price' )
+        main='Debt price', ... )
   abline(v=sol$d.bar, lty=2, lwd=2, col=1:n )
   abline(v=sol$d.grid, lty=1, lwd=.25 )
   abline(h=c(0,1))
@@ -181,7 +184,7 @@ plot.sol <- function( sol ){
 
   # Plot QE
   plot( range(sol$d.grid), range(sol$QE), type='n', xlab='Debt value', ylab='',
-        main='Expected continuation debt price' )
+        main='Expected continuation debt price', ... )
   abline(v=sol$d.bar, lty=2, lwd=2, col=1:n )
   abline(v=sol$d.grid, lty=1, lwd=.25 )
   abline(h=c(0,1))
@@ -189,7 +192,7 @@ plot.sol <- function( sol ){
 
   # Plot P
   plot( range(sol$d.grid), range(sol$P), type='n', xlab='Debt value', ylab='',
-        main='Default probability' )
+        main='Default probability', ... )
   abline(v=sol$d.bar, lty=2, lwd=2, col=1:n )
   abline(v=sol$d.grid, lty=1, lwd=.25 )
   abline(h=c(0,1))
@@ -197,7 +200,7 @@ plot.sol <- function( sol ){
 
   # Plot D.prime
   plot( range(sol$d.grid), range(sol$D.prime), type='n', xlab='Debt value', ylab='',
-        main='Expected continuation debt' )
+        main='Expected continuation debt', ... )
   abline(v=sol$d.bar, lty=2, lwd=2, col=1:n )
   abline(h=sol$d.bar, lty=2, col=1:n )
   abline(v=sol$d.grid, lty=1, lwd=.25 )

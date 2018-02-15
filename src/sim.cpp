@@ -9,95 +9,10 @@
  ***********************************************************************************/
 
 #include "sim.hpp"
+#include "surp.hpp"
+#include "tri.hpp"
+#include "qiter.hpp"
 
-// [[Rcpp::export]]
-arma::vec markov_sim( const int n, const NumericMatrix M, const int s0,
-                      const int n_s ){
-  // Fast Markov simulation
-
-  NumericVector out(n) ;
-  out(0) = s0 ;
-  // Initialize output
-  NumericMatrix sum_M( n_s, n_s ) ;
-  // The row sum of M
-  for( int i=0 ; i < n_s ; i++ ){
-    sum_M( i, 0 ) = M( i , 0 ) ;
-    // The first column
-    for( int j=1 ; j < n_s ; j++ ){
-      sum_M( i, j ) = sum_M( i, j - 1 ) + M( i , j ) ;
-    }
-  } // Create the row sum of M
-
-  NumericVector shks = runif( n ) ;
-  // The vector of random shocks on [0,1]
-  int this_s = 0 ;
-
-  for( int i = 1 ; i < n ; i++ ){
-    this_s = 0 ;
-    // Initialize counters
-    while( shks(i) > sum_M( out(i-1), this_s ) ){
-      this_s++ ;
-    }
-    out( i ) = this_s ;
-  }
-
-  vec out_arma = zeros(n) ;
-  for ( int i = 0 ; i < n ; i++ )
-    out_arma(i) = out(i) ;
-  // Convert to arma type
-
-  return out_arma ;
-}
-
-
-// [[Rcpp::export]]
-arma::mat ms_var( arma::mat a, arma::mat A, arma::mat Sigma, arma::vec ms, int m ){
-  // Simulates a VAR with a Markov switching process for the mean
-  int n_v = A.n_rows ;
-  int n_s = a.n_cols ;
-  // Problem dimensions
-  mat out = zeros( n_v, m ) ;
-  // Initialize output
-  out.col(0) = ( eye(n_v,n_v) - A ) * a.col(ms(0)) ;
-  // First period is conditional average given markov state
-  mat err_0 = randn( n_v, m ) ;
-  // Standrad normal simulations
-  mat sd = chol(Sigma).t() ;
-  // LT matrix s.t. sd * sd.t() = Sigma
-  mat err = sd * err_0 ;
-  // The matrix of errors with variance sigma
-  for( int i = 1 ; i < m ; i++ ){
-    out.col(i) = a.col(ms(i)) + A * out.col(i-1) + err.col(i) ;
-  }
-  return out ;
-}
-
-// double p_triangle( double x, double a, double b, double c ){
-// // Triangle distribution CDF on (a,b,c)
-//   if( x <= a )
-//     return 0 ;
-//   if( x >= c )
-//     return 1 ;
-//   double z = 2 / ( c - a ) ;
-//   // The peak of the triangle
-//   if( x <= b )
-//     return 0.5 * z / ( b - a ) * ( x * ( x - 2 * a ) + pow( a, 2 ) ) ;
-//   if( x > b )
-//     return 1 - p_triangle( c - x, 0, c - b, c - a ) ;
-// }
-//
-// double surp_triangle( double d, vec coeff ){
-//   // Computes the surplus function which is y1 below x1, and y2 above x2, and
-//   // follows a triangle distribution CDF between, with intemediate point x3
-//   double x1 = coeff(0) ;
-//   double x2 = coeff(1) ;
-//   double x3 = coeff(2) ;
-//   double y1 = coeff(3) ;
-//   double y2 = coeff(4) ;
-//   // Extract the coefficients
-//   return y1 + ( y2 - y1 ) * p_triangle( d, x1, x2, x3 ) ;
-// }
-//
 // double zed_sim( double p, int i_eta, double d, arma::vec d_bar, List params ) {
 // // Computes zed: Local copy in sim.cpp
 //
@@ -125,94 +40,116 @@ arma::mat ms_var( arma::mat a, arma::mat A, arma::mat Sigma, arma::vec ms, int m
 //   return z ;
 // }
 //
-// // [[Rcpp::export]]
-// arma::mat sim_core( const int n, vec d_bar, arma::mat dc_d, arma::mat dc_p,
-//                     arma::mat dc_rp, List params, double d0 ){
-// // Computes the simulation of the model
-// // Outputs: i_eta, r-g, expected (r-g)', d, d.bar, default indicator, s(d), eps,
-// // s, p, RP, effective int rate, d', p', RP'
-//
-//   /** 0. Extract parameters **/
-//   mat trans = params["trans"] ;
-//   NumericMatrix trans_nm = params["trans"] ;
-//   vec v_eta = params["v.eta"] ;
-//   int n_eta = v_eta.n_elem ;
-//   double phi = params["phi"] ;
-//   vec v_s_coeff = params["v.s.coeff"] ;
-//   double eps_bar = params["eps.bar"] ;
-//
-//   /** 1..  The independent parts **/
-//   int s0 = n_eta / 2 ;
-//     // Approimate centre of distribution
-//   vec i_eta_c = markov_sim( n, trans_nm, s0, n_eta ) ;
-//   vec i_eta_R = i_eta_c + 1 ;
-//     // The indices of i_eta
-//   vec eps = zeros( n ) ;
-//   NumericVector q_eps = runif(n) ;
-//       // Initiate the vector for eps draws
-//   for ( int i = 0 ; i < n ; i++ ){
-//     eps(i) = q_triangle( q_eps(i), - eps_bar, 0, eps_bar ) ;
-//   }   // The vector of eps
-//
-//   /** 2. The output **/
-//   mat out = zeros( n, 15 ) ;
-//   out.col(0) = i_eta_R ;
-//   out.col(7) = eps ;
-//       // The exogenous stuff
-//   out(0,11) = d0 ;
-//       // Period 0.  First period or so is inconsitent.  Not a big deal.
-//   vec e_eta_prime = trans * v_eta ;
-//       // The expected value of eta in the next period.
-//   vec p_prime = zeros(1) ;
-//   vec rp_prime = zeros(1) ;
-//   vec v_d = zeros(1) ;
-//   vec this_dc_d = dc_d.col(0) ;
-//   vec this_dc_p = dc_p.col(0) ;
-//   vec this_dc_rp = dc_rp.col(0) ;
-//
-//   for( int i = 1 ; i < n ; i ++ ){
-//     out(i,1) = v_eta(i_eta_c(i)) ;
-//         // The realized value of r-g
-//     out(i,2) = e_eta_prime(i_eta_c(i)) ;
-//         // The expected level of eta in the next period
-//     out(i,3) = out(i-1,12) ;
-//         // Debt
-//     out(i,4) = d_bar(i_eta_c(i)) ;
-//         // The debt limiit
-//     out(i,5) = ( out(i,3) <= out(i,4) ) ? 0 : 1 ;
-//         // Default indicator
-//     out(i,6) = surp_triangle( out(i,3), v_s_coeff ) ;
-//     out(i,8) = out(i,6) + out(i,7) ;
-//         // The surplus rule and realized surplus
-//     out(i,9) = out(i,13) ;
-//     out(i,10) = out(i,14) ;
-//         // The inherited probability of default and associated risk premium
-//     out(i,11) = 1 + out(i,1) + out(i,10) ;
-//         // The effective growth rate of debt
-//     out(i,12) = std::max( out(i,3) * out(i,11) - out(i,8), 0.0 ) ;
-//         // Continuation debt
-//     v_d(0) = out(i,3) ;
-//     this_dc_d = dc_d.col(i_eta_c(i)) ;
-//     this_dc_p = dc_p.col(i_eta_c(i)) ;
-//     this_dc_rp = dc_rp.col(i_eta_c(i)) ;
-//         // Set up linear interpolation
-//     if( out(i,3) < this_dc_d(0) ){
-//       p_prime(0) = 0 ;
-//       rp_prime(0) = 0 ;
-//           // If no risk of default in next period
-//     }else{
-//       interp1( this_dc_d, this_dc_p, v_d, p_prime) ;
-//       interp1( this_dc_d, this_dc_rp, v_d, rp_prime ) ;
-//           // Interpolation for continuation default probability and risk premium
-//     }
-//     out( i, 13 ) = p_prime(0) ;
-//     out( i, 14 ) = rp_prime(0) ;
-//         // The default probability and risk premium
-//   }
-//
-//   return out ;
-//
-// }
+// [[Rcpp::export]]
+NumericMatrix sim_core( arma::vec i_idx_R, arma::vec d_bar, arma::vec d_grid, arma::mat P,
+                        arma::mat Q, List params, double d0, bool s_flag, arma::vec s_in ){
+// Computes the simulation of the model
+// Outputs: i_idx, R, G, r-g, expected (r-g)', d, d.bar, default indicator, s(d), eps,
+// s, p, q, d', p', q'
+
+  /** 0. Extract parameters **/
+  const int n = i_idx_R.n_elem ;
+  double phi = params["phi"] ;
+  double lambda = params["lambda"] ;
+  double s_sd = params["surp.sd"] ;
+  double eps_bar = std::sqrt(6) * s_sd ;
+  vec v_R = params["R"] ;
+  vec v_G = params["G"] ;
+  vec v_s_coeff = params["v.s.coeff"] ;
+  vec shift = params["s.shift"] ;
+  vec i_idx_c = i_idx_R - 1 ;                     // c-style counter
+  mat trans = params["trans"] ;
+  int n_states =v_R.n_elem ;                      // umber of states
+
+  /** 1..  The independent parts **/
+  vec eps = zeros( n ) ;
+  NumericVector q_eps = runif(n) ;                // Initiate the vector for eps draws
+  for ( int i = 0 ; i < n ; i++ ){
+    eps(i) = q_triangle( q_eps(i), - eps_bar, 0, eps_bar ) ;
+  }   // The vector of eps
+
+  /** 2. The output **/
+  mat out = zeros( n, 16 ) ;
+  out.col(0) = i_idx_R ;
+  out.col(9) = eps ;
+      // The exogenous stuff
+  vec e_R_prime = trans * v_R ;
+  vec e_G_prime = trans * v_G ;
+      // The expected value of eta in the next period.
+  vec v_d = zeros(1) ;                        // Placeholder for interpolation
+  vec p_prime = zeros(1) ;                    // Placeholder for interpolation
+  vec q_prime = zeros(1) ;                    // Placeholder for interpolation
+  vec e_grid = zeros(1) ;                     // Need to use a grid of continuation e
+  mat m_d_prime = zeros(1,n_states) ;         // Because d_prime returns a matrix
+
+  v_d(0) = d0 ;
+  vec this_P = conv_to<vec>::from(P.row(v_R(i_idx_c(0)))) ;
+  vec this_Q = conv_to<vec>::from(Q.row(v_R(i_idx_c(0)))) ;
+      // Generate initial interpolation points
+  interp1( d_grid, this_P, v_d, p_prime ) ;
+  interp1( d_grid, this_Q, v_d, q_prime ) ;
+  out(0,13) = d0 ;
+  out(0,14) = p_prime(0) ;
+  out(0,15) = q_prime(0) ;
+      // Period 0.  Debt, debt price and default probability.
+
+  for( int i = 1 ; i < n ; i ++ ){
+    out(i,1) = v_R(i_idx_c(i)) ;              // The realized value of R
+    out(i,2) = v_G(i_idx_c(i)) ;              // The realized value of G
+    out(i,3) = out(i,1) - out(i,2) ;          // The realized value of R-G
+    out(i,4) = e_R_prime(i_idx_c(i)) - e_G_prime(i_idx_c(i)) ;
+        // The expected level of R-G in the next period
+    out(i,5) = out(i-1,13) ;
+        // Debt
+    out(i,6) = d_bar(i_idx_c(i)) ;
+        // The debt limiit
+    out(i,8) = surp_tri( out(i,5), v_s_coeff, shift(i_idx_c(i)) ) ;
+    if(s_flag){
+      out(i,10) = s_in(i) ;
+      out(i,9) = out(i,10) - out(i,8) ;
+    }else{
+      out(i,10) = out(i,8) + out(i,9) ;
+          // The surplus rule and realized surplus
+    }
+    out(i,11) = out(i-1,14) ;
+    out(i,12) = out(i-1,15) ;
+        // The inherited probability of default and debt price
+    e_grid(0) = out(i,9) ;
+    m_d_prime = d_prime( i_idx_c(i), out(i,5), d_bar, out(i,12), Q, d_grid, v_G, shift,
+                         lambda, e_grid, v_s_coeff, true, zeros(1,1), false, 0, 1e-05, 20, false ) ;
+    out(i,13) = std::max( m_d_prime(0,i_idx_c(i)), 0.0 ) ;
+        // Continuation debt
+    out(i,7) = ( out(i,5) <= out(i,6) ) ? 0 : 1 ;
+        // Default indicator
+    if( out(i,7) == 1 ){
+    // If default happens, then debt is written down
+      out(i,13) = phi * ( 1 - lambda ) * out(i,12) * out(i,5) ;
+      out(i,14) = 1 ;
+      out(i,15) = 1 ;
+          // Claims worth a fraction of the repayment due are written (can
+          // assume certain repayment here because only the continuation debt
+          // burden in the next period really matters)
+    }else{
+      v_d(0) = out(i,5) ;
+      vec this_P = conv_to<vec>::from(P.row(v_R(i_idx_c(0)))) ;
+      vec this_Q = conv_to<vec>::from(Q.row(v_R(i_idx_c(0)))) ;
+          // Generate initial interpolation points
+      interp1( d_grid, this_P, v_d, p_prime ) ;
+      interp1( d_grid, this_Q, v_d, q_prime ) ;
+      out( i, 14 ) = p_prime(0) ;
+      out( i, 15 ) = q_prime(0) ;
+          // The default probability and continuation debt price
+    }
+  }
+
+  NumericMatrix nm_out = wrap(out) ;
+  colnames(nm_out) = CharacterVector::create("idx", "R", "G", "rmg", "e.rmg", "d", "d.bar",
+           "def", "s.d", "eps", "s", "p", "q", "d.prime", "p.prime", "q.prime" ) ;
+
+  return nm_out ;
+
+}
+
 //
 // // [[Rcpp::export]]
 // NumericMatrix sim( List sol, List dc, const int n = 1e06, double d0 = 0 ){
@@ -233,16 +170,4 @@ arma::mat ms_var( arma::mat a, arma::mat A, arma::mat Sigma, arma::vec ms, int m
 // using namespace Rcpp;
 // using namespace arma;
 //
-// // [[Rcpp::export]]
-// double q_triangle( double q, double a, double b, double c ){
-// // Triangle distribution inversion
-//   if( q <= ( b - a ) / ( c - a ) ){
-//     double disc = q * ( b - a ) * ( c - a )  ;
-//         // The discriminant
-//         // Because x^2 - 2ay + C = 0, where C = a^2 - disc
-//     return a + pow( disc, .5 ) ;
-//   }
-//   return( c - q_triangle( 1 - q, 0, c - b, c - a ) ) ;
-//       // If q is below the mode then call recursively
-// }
-//
+

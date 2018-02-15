@@ -52,7 +52,7 @@ sol.search <- function(params, init.guess=NULL,
                        An=c(0), Bn=c(0), Cn=c(0), def=matrix(0), plot.on=FALSE ){
 # Computes an approximate solution using search methods
   if( is.null(init.guess) ){
-    init.guess <- cbind( 1e-05, sol.nonstoch(params) )
+    init.guess <- if(params$tri) d.p.init.tri( params, An, Bn, Cn, def ) else cbind( 1e-05, sol.nonstoch(params) )
   }
 
   nn <- length(params$R)

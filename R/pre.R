@@ -48,30 +48,30 @@ sol.nonstoch.tri <- function(params){
   out <- rep(0,n)
       # Initialize the output
   for( i in 1:n ){
-    if( params$v.s.coeff[5] + params$v.s.coeff[6]*( params$G[i]-1 )*100 > 0 &
+    if( params$v.s.coeff[5] + params$s.shift[i] > 0 &
         params$R[i] < params$G[i] ){
         # Case I: Any arbitrarily large debt level can be maintained
       out[i] <- Inf
     }else{
-      if( params$v.s.coeff[5] + params$v.s.coeff[6]*( params$G[i]-1 )*100 < 0 &
+      if( params$v.s.coeff[5] + params$s.shift[i] < 0 &
           params$R[i] > params$G[i] ){
           # Case II: No positive debt level can be maintained
         out[i] <- 0
       }else{
           # Case III: A finite, positive debt level can possibly be maintained
-        fn <- function(d) surp_tri( d, params$v.s.coeff, params$G[i] ) -
+        fn <- function(d) surp_tri( d, params$v.s.coeff, params$s.shift[i] ) -
                               ( params$R[i] - params$G[i] ) * d
-        jac <- function(d) d_surp_tri( d, params$v.s.coeff, params$G[i] ) -
+        jac <- function(d) d_surp_tri( d, params$v.s.coeff, params$s.shift[i] ) -
                               ( params$R[i] - params$G[i] )
             # Set up the funciton and jacobian for the root of s(d) = (R-G)*d
-        s.upper <- params$G[i] * params$v.s.coeff[6] + params$v.s.coeff[5]
+        s.upper <- params$s.shift[i] + params$v.s.coeff[5]
         d.0 <- s.upper / ( params$R[i] - params$G[i] )
             # Initial guess
         sol <- nleqslv( d.0, fn, jac )
             # Find the root
         if( abs(sol$fvec) > 1e-06 ){
           if( params$v.s.coeff[3] * ( params$R[i] - params$G[i] ) >
-              params$v.s.coeff[5] + params$v.s.coeff[6]*( params$G[i]-1 )*100 ){
+              params$v.s.coeff[5] + params$s.shift[i] ){
           # Case IIIa: If cannot find a solution, check to see if R-G line is
           # above s(b) at the start of the upper flat part.
             out[i] <- 0
@@ -285,4 +285,18 @@ d.p.init.wrapper <- function(params, An, Bn, Cn, def ){
   return( cbind( p.guess, d.guess ) )
 }
 
-
+d.p.init.tri <- function( params, An, Bn, Cn, def ){
+# Creates an initial guess for the triangular distribution. A set of points
+# (p,d) where the probability of default is very small.
+  n.X <- length(params$R)
+  d.1 <- optim( 0, function(d) - d + 1000 *
+                     max( zed( rep(0,n.X), rep(d,n.X), params, An, Cn, def, 0 ) ) )
+      # The one-dimensional guess, to get the level correct
+  d.n <- optim( rep(d.1$par,n.X) , function(d) - sum(d) + 1000 *
+                          sum( zed( rep(0,n.X), d, params, An, Cn, def, 0 ) ) )
+      # The n-dimensional guess
+  d.init <- d.n$par
+  p.init <- p_init_d( params, rep(0,disc$n.X), d.init, An, Bn, Cn, def )
+      # The initial guesses
+  return( cbind( p.init, d.init ) )
+}

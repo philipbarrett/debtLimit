@@ -12,7 +12,7 @@ sol.wrapper <- function( params, init.guess=NULL,
 
   nn <- length(params$R)
   if(is.null(init.guess)){
-    init.guess <- d.p.init.wrapper( params, An, Bn, Cn, def )
+    init.guess <- if(params$tri) d.p.init.tri( params, An, Bn, Cn, def ) else d.p.init.wrapper( params, An, Bn, Cn, def )
   }
   maxit <- if(is.null(params$it)) 10 else params$it
   tol <- if(is.null(params$tol)) 1e-02 else params$tol
@@ -48,14 +48,14 @@ sol.wrapper <- function( params, init.guess=NULL,
       for( i in 1:nn ){
         err.i <- zed_2( p.guess, d.guess, params, An, Bn, Cn, def ) - cbind( p.guess, rep(1,nn) )
         if(abs(err.i[i,1]) > 1e-02){
-          # p.guess[i] <- p_init_d_i( params, p.guess, d.guess, An, Bn, Cn, def, i-1 )
-          p.guess[i] <- 0
+          p.guess[i] <- p_init_d_i( params, p.guess, d.guess, An, Bn, Cn, def, i-1 )
+          # p.guess[i] <- 0
         }
             # Use iterative search if the initial guess is bad
-        # sol.i <- sol.core.global( params, cbind( p.guess, d.guess), 'core.nl.i',
-        #                           An, Bn, Cn, def, i )
-        sol.i <- sol.core.local( params, cbind( p.guess, d.guess), 'core.nl.i',
+        sol.i <- sol.core.global( params, cbind( p.guess, d.guess), 'core.nl.i',
                                   An, Bn, Cn, def, i )
+        # sol.i <- sol.core.local( params, cbind( p.guess, d.guess), 'core.nl.i',
+        #                           An, Bn, Cn, def, i )
         p.guess <- sol.i$p
         d.guess <- sol.i$d
         if(plot.on){
@@ -72,9 +72,14 @@ sol.wrapper <- function( params, init.guess=NULL,
     message("   err = ", round(err,4) )
   }
 
-  sol <- sol.core.global( params, cbind( sol.i$p, sol.i$d ), 'core.nl', An, Bn, Cn, def )
-      # The nonlinear solution
-  return(sol)
+  if( max(abs(sol.i$err)) < 1e-06 ){
+    # browser()
+    return(sol.i)
+  }else{
+    sol <- sol.core.global( params, cbind( sol.i$p, sol.i$d ), 'core.nl', An, Bn, Cn, def )
+        # The nonlinear solution
+    return(sol)
+  }
 }
 
 sol.core.global <- function( params, init.guess, st.which.sol, An, Bn, Cn, def, i=1 ){
@@ -117,7 +122,8 @@ sol.core.global <- function( params, init.guess, st.which.sol, An, Bn, Cn, def, 
         d.init <- d_init_p_i( params, rep(0,nn), rep(130,nn), An, Bn, Cn, def, i, 200 )
             # Find a better guess for d
         guess[i,'d.guess'] <- d.init
-        sol <- sol.core.nl.i(params, guess, An, Bn, Cn, def, i)
+        sol.cand <- sol.core.nl.i(params, guess, An, Bn, Cn, def, i)
+        if( max(abs(sol.cand$fvec) < max(abs(sol$fvec)) ) ) sol <- sol.cand
       }
       cand.p <- guess[,1]
       d <- guess[,2]
@@ -135,7 +141,7 @@ sol.core.global <- function( params, init.guess, st.which.sol, An, Bn, Cn, def, 
           # Replace the global minimum with the candidate if it is inferior.  WHY?
       p.global[i] <- p.global.i
           # Update the global tracked in the loop
-      guess[i,] <- c( p.global.i, d[i] )
+      guess[i,] <- c( .5( p.global.i + cand.p[i] ), d[i] )
           # Update the guess
       err <- zed_2( p.global, d, params, An, Bn, Cn, def )[i,] - c(p.global[i],1)
           # The error
@@ -235,7 +241,13 @@ sol.core.nl <- function(params, init.guess, An, Bn, Cn, def){
         # Extract the values
     z.2 <- zed_2( p, d, params, An, Bn, Cn, def )
         # The vector of: the implied value of p and the gradient wrt p
-    return( c( z.2 - cbind( p, rep(1,nn) ) ) )
+    z.2[,1] <- pmax( pmin( z.2[,1], 1 ), 0 ) + 1000
+        # Force bounds
+    out <- z.2 - cbind( p, rep(1,nn) )
+    z.2[,1] <- z.2[,1] + ( z.2[,1] < 0 ) * z.2[,1] ^ 2
+    z.2[,1] <- z.2[,1] + ( z.2[,1] > 1 ) * (z.2[,1]-1) ^ 2
+        # Force ounds some more!
+    return( c( out ) )
         # Becuase we want the slope to be unity at the fixed point
   }
 
@@ -271,6 +283,7 @@ sol.core.nl.i <- function(params, init.guess, An, Bn, Cn, def, i){
     if( p[i] > 1 ){
       p[i] <- 1
       z.2 <- zed_2( p, d, params, An, Bn, Cn, def )[i,]
+      z.2[is.nan(z.2)] <- 0         # Error guard.
       return( z.2 - c( 1, 1 ) + ( x[1] - 1 ) ^ 2 )
     }
     return( z.2 - c( p[i], 1 ) )

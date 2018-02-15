@@ -29,6 +29,7 @@ arma::mat ziter( arma::mat P, arma::vec d_bar, arma::mat QHat, //arma::mat Q,
   vec R = params["R"] ;
   vec G = params["G"] ;
   vec coeff = params["v.s.coeff"] ;
+  vec shift = params["s.shift"] ;
   double phi = params["phi"] ;
   double lambda = params["lambda"] ;
       // Extraction
@@ -51,16 +52,17 @@ arma::mat ziter( arma::mat P, arma::vec d_bar, arma::mat QHat, //arma::mat Q,
         // Choose Cn to be the debt price *just* below the default threshold
   }
   if( print_level > 0 ){
-    Rcout << "\nd_bar_idx: " << conv_to<rowvec>::from(d_bar_idx) << std::endl << std::endl ;
+    // Rcout << "\nd_bar_idx: " << conv_to<rowvec>::from(d_bar_idx) << std::endl << std::endl ;
     Rcout << std::setw(10) << "Iteration" << std::setw(10) << "diff" << std::setw(10) <<
       "q_diff" << std::setw(10) << "q_1_diff" << std::endl ;
   }
 
   while( ( diff > tol || q_1_step_diff  > tol ) && it < maxit ){
     it++ ;
-    QHat_new = q_hat_mat( P_old, d_bar, QHat_old, QHat_old, d_grid, R, G, lambda, phi, e_grid,
+    QHat_new = .75 * q_hat_mat( P_old, d_bar, QHat_old, QHat_old, d_grid, R, G, shift, lambda, phi, e_grid,
                               coeff, tri, D_prime_0, D_prime_0_flag, trans, print_level-1,
-                              q_tol, q_maxit, d_tol, d_maxit );
+                              q_tol, q_maxit, d_tol, d_maxit ) +
+                              .25 *   QHat_old;
     // Now calculate:
     //   - Cn = vector of prices at default boundary
     //   - mC = matrix of QE given the current price matrix
@@ -73,19 +75,20 @@ arma::mat ziter( arma::mat P, arma::vec d_bar, arma::mat QHat, //arma::mat Q,
     }
 
     for( int j = 0 ; j < m ; j++ ){
-      vec An = q_e( d_grid(j), d_bar, QHat_new.col(j), QHat_new, d_grid, G, lambda, e_grid,
+      vec An = q_e( d_grid(j), d_bar, QHat_new.col(j), QHat_new, d_grid, G, shift, lambda, e_grid,
                     coeff, tri, D_prime_0, D_prime_0_flag, trans, print_level-1, d_tol, d_maxit ) ;
-      P_new.col(j) = zed_d( P_old.col(j), d_grid(j)*ones(n), d_bar, params, An, Cn, def ) ;
+      P_new.col(j) = .75 * zed_d( P_old.col(j), d_grid(j)*ones(n), d_bar, params, An, Cn, def ) +
+                        .25 * P_old.col(j);
     }
-        // Update P
-    diff = abs( P_new - P_old ).max() ;
-    q_diff = abs( QHat_new - QHat_old ).max() ;
+        // Update P.  Add gain to limit oscillation
+    diff = abs( P_new - P_old ).max() / .75 ;
+    q_diff = abs( QHat_new - QHat_old ).max() / .75 ;
         // The difference
-    QHat_1_step = q_hat_mat( P_old, d_bar, QHat_old, QHat_old, d_grid, R, G, lambda, phi, e_grid,
+    QHat_1_step = q_hat_mat( P_old, d_bar, QHat_old, QHat_old, d_grid, R, G, shift, lambda, phi, e_grid,
                           coeff, tri, D_prime_0, D_prime_0_flag, trans, print_level-1,
                           q_tol, 1, d_tol, d_maxit );
     q_1_step_diff = abs( QHat_1_step - QHat_old ).max() ;
-                           // The one-step difference - QHat_old ).max() ;
+                           // ( )The one-step difference - QHat_old ).max() ;
         // The one-step difference
     if( print_level > 0 ){
       Rcout << std::setw(10) <<  it << std::setprecision(3) << std::setw(10) << diff <<

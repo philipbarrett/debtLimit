@@ -14,10 +14,10 @@
 
 // [[Rcpp::export]]
 arma::mat d_prime( int i_x, double d, arma::vec d_bar, double qhat, arma::mat Q,
-                   arma::vec d_grid, arma::vec G, double lambda, arma::vec e_grid,
+                   arma::vec d_grid, arma::vec G, arma::vec shift, double lambda, arma::vec e_grid,
                    arma::vec coeff, bool tri,
                    arma::mat D_prime_0, bool D_prime_0_flag, int print_level=1,
-                   double tol=1e-05, int maxit=20 ){
+                   double tol=1e-05, int maxit=20, bool report=false ){
 // Computes the vector of fixed points for the continuation debt satisfying, for
 // each (x',e):
 //      d' = d * ( (1-lambda) +lambda * q(x',d') ) / ( G(x') * qhat ) - s(x',d) - e
@@ -25,7 +25,7 @@ arma::mat d_prime( int i_x, double d, arma::vec d_bar, double qhat, arma::mat Q,
   int n = d_bar.n_elem ;
   int m = e_grid.n_elem ;
       // Dimensions
-  vec s = v_surp( d * ones(n), coeff, G, tri) ;
+  vec s = v_surp( d * ones(n), coeff, shift, tri) ;
       // Surpluses
   vec qprime = zeros(m) ;
   mat dprime = zeros(m,n) ;
@@ -42,6 +42,11 @@ arma::mat d_prime( int i_x, double d, arma::vec d_bar, double qhat, arma::mat Q,
       // create initial D_prime if necessary
           // Rcout << "s:\n" << s << std::endl ;
           // Rcout << "D_prime_0:\n" << D_prime_0 << std::endl ;
+
+  double maxdiff = 0 ;
+  int worst_state = 0 ;
+  int worst_it = 0 ;
+  uvec worst_loc = zeros<uvec>(m) ;
 
   for( int i = 0 ; i < n ; i++ ){
   // Loop over states
@@ -61,8 +66,8 @@ arma::mat d_prime( int i_x, double d, arma::vec d_bar, double qhat, arma::mat Q,
     uvec loc_sol = find( has_sol ) ;
         // There is no solution when e is too low to find a solution at the debt
         // limit.
-    //       Rcout << "has_sol:\n" << has_sol << std::endl ;
-    //       Rcout << "loc_sol:\n" << loc_sol << std::endl ;
+          // Rcout << "has_sol:\n" << has_sol << std::endl ;
+          // Rcout << "loc_sol:\n" << loc_sol << std::endl ;
 
     while( diff > tol && it < maxit && any(has_sol) ){
       it++ ;
@@ -70,26 +75,44 @@ arma::mat d_prime( int i_x, double d, arma::vec d_bar, double qhat, arma::mat Q,
           // It the guess is above d_bar, cap it
       interp1( d_grid, Q_t.col(i), this_dprime, qprime, "linear", 1 ) ;
           // Interpolate the price
-              // Rcout << "qprime:\n" << qprime << std::endl ;
-              // Rcout << "e_grid:\n" << e_grid << std::endl ;
       this_dprime.elem(loc_sol) =
-        clamp( d * ( 1 - lambda + lambda * qprime.elem(loc_sol) ) / ( G(i) * qhat ) -
-                      s(i) - e_grid(loc_sol), 0, d_bar(i) ) ;
-          // Fixed point equations
-              // Rcout << "this_dprime:\n" << this_dprime << std::endl ;
-              // Rcout << "this_dprime_old:\n" << this_dprime_old << std::endl ;
-      diff = max( abs( this_dprime.elem(loc_sol) - this_dprime_old.elem(loc_sol) ) ) ;
-      this_dprime_old = this_dprime ;
-          // Update iteration
+                 .95 * clamp( d * ( 1 - lambda + lambda * qprime.elem(loc_sol) ) / ( G(i) * qhat ) -
+                      s(i) - e_grid(loc_sol), 0, max(d_grid) ) +
+                      .05 * this_dprime_old.elem(loc_sol); // d_bar(i) ) ;
+          // Fixed point equations.  Add the gain to avoid oscillations
+      diff = max( abs( this_dprime.elem(loc_sol) - this_dprime_old.elem(loc_sol) ) ) / .05 ;
+          // Measure difference
       if( print_level > 1 ){
         Rcout << "  it = " << it << std::endl ;
         Rcout << "  diff = " << diff << std::endl ;
+        // Rcout << "  this_dprime:\n " << this_dprime ;
+        // Rcout << "  this_dprime_old:\n" << this_dprime_old ;
+        // Rcout << "  qprime:\n" << qprime ;
+        // Rcout << "  e_grid:\n" << e_grid ;
       }
+      this_dprime_old = this_dprime ;
+          // Update iteration
     }
     if( any( 1 - has_sol ) ){
-      this_dprime.elem(find( 1 - has_sol ) ).fill(d_bar(i) + 1 ) ;
+      this_dprime.elem(find( 1 - has_sol ) ).fill( max(d_grid) ) ;
+    }else{
+      if( diff > maxdiff ){
+        maxdiff = diff ;
+        worst_state = i ;
+        worst_it = it ;
+        worst_loc = loc_sol ;
+      }
     }
     dprime.col(i) = this_dprime ;
+        // Save output
+  }
+
+  if( report & (maxdiff > 0) & (maxdiff > tol) ){
+  // Report failure
+    Rcout << "Maxdiff = " << maxdiff << std::endl ;
+    Rcout << "worst_state = " << worst_state << std::endl ;
+    Rcout << "worst_it = " << worst_it << std::endl ;
+    Rcout << "worst_loc = " << worst_loc << std::endl ;
   }
 
   return dprime ;
@@ -98,7 +121,7 @@ arma::mat d_prime( int i_x, double d, arma::vec d_bar, double qhat, arma::mat Q,
 
 // [[Rcpp::export]]
 arma::vec q_e( double d, arma::vec d_bar, arma::vec qhat, arma::mat Q,
-                   arma::vec d_grid, arma::vec G, double lambda, arma::vec e_grid,
+                   arma::vec d_grid, arma::vec G, arma::vec shift, double lambda, arma::vec e_grid,
                    arma::vec coeff, bool tri, arma::mat D_prime_0, bool D_prime_0_flag,
                    arma::mat trans, int print_level=1, double tol=1e-05, int maxit=20 ){
 // Computes the expected continuation price q_e in each state.  Takes as an
@@ -120,7 +143,7 @@ arma::vec q_e( double d, arma::vec d_bar, arma::vec qhat, arma::mat Q,
       // Transpose (need for linear interpolation)
 
   for( int i = 0 ; i < n ; i++ ){
-    temp_dprime = d_prime( i,  d, d_bar, qhat(i), Q, d_grid, G, lambda, e_grid, coeff,
+    temp_dprime = d_prime( i,  d, d_bar, qhat(i), Q, d_grid, G, shift, lambda, e_grid, coeff,
                            tri, D_prime_0, D_prime_0_flag, print_level - 1, tol, maxit ) ;
         // The continuation debt level
     for( int j = 0 ; j < n ; j++ ){
@@ -147,7 +170,7 @@ arma::vec q_e( double d, arma::vec d_bar, arma::vec qhat, arma::mat Q,
 
 // [[Rcpp::export]]
 arma::vec q_hat_fn( double d, arma::vec p, arma::vec d_bar, arma::vec qhat, arma::mat Q,
-               arma::vec d_grid, arma::vec R, arma::vec G, double lambda, double phi,
+               arma::vec d_grid, arma::vec R, arma::vec G, arma::vec shift, double lambda, double phi,
                arma::vec e_grid, arma::vec coeff, bool tri, arma::mat D_prime_0,
                bool D_prime_0_flag,arma::mat trans, int print_level=1, double tol=1e-05,
                int maxit=50, double d_tol=1e-05, int d_maxit=20 ){
@@ -166,15 +189,15 @@ arma::vec q_hat_fn( double d, arma::vec p, arma::vec d_bar, arma::vec qhat, arma
       // Initialize loop variables
   while( diff > tol && it < maxit ){
     it++ ;
-    vec qe = q_e( d, d_bar, qhat, Q, d_grid, G, lambda, e_grid, coeff, tri, D_prime_0,
+    vec qe = q_e( d, d_bar, qhat, Q, d_grid, G, shift, lambda, e_grid, coeff, tri, D_prime_0,
                   D_prime_0_flag, trans, print_level - 1, d_tol, d_maxit ) ;
         // Compute expected continuation price
     q = q_fn( R, p, trans, lambda, phi, n, "fix", G, qe, def ) ;
         // Use fix because computing qe is the whole point!
-    diff = max( abs( q - qhat) ) ;
+    qhat = .95 * q + .05 * qhat ;
+        // Gain less than one to hinder oscillation
+    diff = max( abs( q - qhat) ) / .05 ;
         // The difference
-    qhat = q ;
-        //
     if( print_level > 0 ){
       if(print_level > 1){
         Rcout << std::endl ;
@@ -189,7 +212,7 @@ arma::vec q_hat_fn( double d, arma::vec p, arma::vec d_bar, arma::vec qhat, arma
 
 // [[Rcpp::export]]
 arma::mat q_hat_mat( arma::mat P, arma::vec d_bar, arma::mat QHat, arma::mat Q,
-                    arma::vec d_grid, arma::vec R, arma::vec G, double lambda, double phi, arma::vec e_grid,
+                    arma::vec d_grid, arma::vec R, arma::vec G, arma::vec shift, double lambda, double phi, arma::vec e_grid,
                     arma::vec coeff, bool tri, arma::mat D_prime_0, bool D_prime_0_flag,
                     arma::mat trans, int print_level=0, double tol=1e-04, int maxit=50,
                     double d_tol=1e-05, int d_maxit=20 ){
@@ -205,7 +228,7 @@ arma::mat q_hat_mat( arma::mat P, arma::vec d_bar, arma::mat QHat, arma::mat Q,
       Rcout << "\nDebt grid point # " << i << std::endl ;
     }
     out.col(i) =  q_hat_fn( d_grid(i), P.col(i), d_bar, QHat.col(i), Q, d_grid, R,
-            G, lambda, phi, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, trans,
+            G, shift, lambda, phi, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, trans,
             print_level - 1, tol, maxit, d_tol, d_maxit ) ;
   }
   return out ;
@@ -214,7 +237,7 @@ arma::mat q_hat_mat( arma::mat P, arma::vec d_bar, arma::mat QHat, arma::mat Q,
 
 // [[Rcpp::export]]
 arma::mat d_prime_mat( arma::vec d_bar, arma::mat QHat, arma::mat Q,
-                       arma::vec d_grid, arma::vec G, double lambda, arma::vec e_grid,
+                       arma::vec d_grid, arma::vec G, arma::vec shift, double lambda, arma::vec e_grid,
                        arma::mat trans, arma::vec coeff, bool tri,
                        arma::mat D_prime_0, bool D_prime_0_flag, int print_level=1,
                        double tol=1e-05, int maxit=20 ){
@@ -228,7 +251,7 @@ arma::mat d_prime_mat( arma::vec d_bar, arma::mat QHat, arma::mat Q,
   for( int i=0 ; i < n ; i++ ){
     for( int j=0 ; j < m ; j++ ){
       out(i,j) = dot( trans.row(i),
-          mean( d_prime( i, d_grid(j), d_bar, QHat(i,j), Q, d_grid, G, lambda, e_grid,
+          mean( d_prime( i, d_grid(j), d_bar, QHat(i,j), Q, d_grid, G, shift, lambda, e_grid,
                       coeff, tri, D_prime_0, D_prime_0_flag, print_level-1, tol, maxit ),
                       0 ) ) ;
             // mean(.,0) takes the column mean (i.e. the mean across e_grid with
@@ -241,7 +264,7 @@ arma::mat d_prime_mat( arma::vec d_bar, arma::mat QHat, arma::mat Q,
 
 // [[Rcpp::export]]
 arma::mat qe_mat( arma::vec d_bar, arma::mat QHat, arma::mat Q,
-                       arma::vec d_grid, arma::vec G, double lambda, arma::vec e_grid,
+                       arma::vec d_grid, arma::vec G, arma::vec shift, double lambda, arma::vec e_grid,
                        arma::mat trans, arma::vec coeff, bool tri,
                        arma::mat D_prime_0, bool D_prime_0_flag, int print_level=0,
                        double tol=1e-05, int maxit=20 ){
@@ -255,7 +278,7 @@ arma::mat qe_mat( arma::vec d_bar, arma::mat QHat, arma::mat Q,
     if( print_level > 0 ){
       Rcout << "\nDebt grid point # " << i << std::endl ;
     }
-    out.col(i) =  q_e( d_grid(i), d_bar, QHat.col(i), Q, d_grid, G,
+    out.col(i) =  q_e( d_grid(i), d_bar, QHat.col(i), Q, d_grid, G, shift,
             lambda, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, trans,
             print_level - 1, tol, maxit ) ;
   }

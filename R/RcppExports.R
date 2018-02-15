@@ -101,32 +101,28 @@ q_d_p_num_i <- function(R, p, trans, lambda, phi, n, i, cont_type, G, An, def) {
     .Call('debtLimits_q_d_p_num_i', PACKAGE = 'debtLimits', R, p, trans, lambda, phi, n, i, cont_type, G, An, def)
 }
 
-d_prime <- function(i_x, d, d_bar, qhat, Q, d_grid, G, lambda, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, print_level = 1L, tol = 1e-05, maxit = 20L) {
-    .Call('debtLimits_d_prime', PACKAGE = 'debtLimits', i_x, d, d_bar, qhat, Q, d_grid, G, lambda, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, print_level, tol, maxit)
+d_prime <- function(i_x, d, d_bar, qhat, Q, d_grid, G, shift, lambda, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, print_level = 1L, tol = 1e-05, maxit = 20L, report = FALSE) {
+    .Call('debtLimits_d_prime', PACKAGE = 'debtLimits', i_x, d, d_bar, qhat, Q, d_grid, G, shift, lambda, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, print_level, tol, maxit, report)
 }
 
-q_e <- function(d, d_bar, qhat, Q, d_grid, G, lambda, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, trans, print_level = 1L, tol = 1e-05, maxit = 20L) {
-    .Call('debtLimits_q_e', PACKAGE = 'debtLimits', d, d_bar, qhat, Q, d_grid, G, lambda, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, trans, print_level, tol, maxit)
+q_e <- function(d, d_bar, qhat, Q, d_grid, G, shift, lambda, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, trans, print_level = 1L, tol = 1e-05, maxit = 20L) {
+    .Call('debtLimits_q_e', PACKAGE = 'debtLimits', d, d_bar, qhat, Q, d_grid, G, shift, lambda, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, trans, print_level, tol, maxit)
 }
 
-q_hat_fn <- function(d, p, d_bar, qhat, Q, d_grid, R, G, lambda, phi, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, trans, print_level = 1L, tol = 1e-05, maxit = 50L, d_tol = 1e-05, d_maxit = 20L) {
-    .Call('debtLimits_q_hat_fn', PACKAGE = 'debtLimits', d, p, d_bar, qhat, Q, d_grid, R, G, lambda, phi, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, trans, print_level, tol, maxit, d_tol, d_maxit)
+q_hat_fn <- function(d, p, d_bar, qhat, Q, d_grid, R, G, shift, lambda, phi, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, trans, print_level = 1L, tol = 1e-05, maxit = 50L, d_tol = 1e-05, d_maxit = 20L) {
+    .Call('debtLimits_q_hat_fn', PACKAGE = 'debtLimits', d, p, d_bar, qhat, Q, d_grid, R, G, shift, lambda, phi, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, trans, print_level, tol, maxit, d_tol, d_maxit)
 }
 
-q_hat_mat <- function(P, d_bar, QHat, Q, d_grid, R, G, lambda, phi, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, trans, print_level = 0L, tol = 1e-04, maxit = 50L, d_tol = 1e-05, d_maxit = 20L) {
-    .Call('debtLimits_q_hat_mat', PACKAGE = 'debtLimits', P, d_bar, QHat, Q, d_grid, R, G, lambda, phi, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, trans, print_level, tol, maxit, d_tol, d_maxit)
+q_hat_mat <- function(P, d_bar, QHat, Q, d_grid, R, G, shift, lambda, phi, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, trans, print_level = 0L, tol = 1e-04, maxit = 50L, d_tol = 1e-05, d_maxit = 20L) {
+    .Call('debtLimits_q_hat_mat', PACKAGE = 'debtLimits', P, d_bar, QHat, Q, d_grid, R, G, shift, lambda, phi, e_grid, coeff, tri, D_prime_0, D_prime_0_flag, trans, print_level, tol, maxit, d_tol, d_maxit)
 }
 
-d_prime_mat <- function(d_bar, QHat, Q, d_grid, G, lambda, e_grid, trans, coeff, tri, D_prime_0, D_prime_0_flag, print_level = 1L, tol = 1e-05, maxit = 20L) {
-    .Call('debtLimits_d_prime_mat', PACKAGE = 'debtLimits', d_bar, QHat, Q, d_grid, G, lambda, e_grid, trans, coeff, tri, D_prime_0, D_prime_0_flag, print_level, tol, maxit)
+d_prime_mat <- function(d_bar, QHat, Q, d_grid, G, shift, lambda, e_grid, trans, coeff, tri, D_prime_0, D_prime_0_flag, print_level = 1L, tol = 1e-05, maxit = 20L) {
+    .Call('debtLimits_d_prime_mat', PACKAGE = 'debtLimits', d_bar, QHat, Q, d_grid, G, shift, lambda, e_grid, trans, coeff, tri, D_prime_0, D_prime_0_flag, print_level, tol, maxit)
 }
 
-qe_mat <- function(d_bar, QHat, Q, d_grid, G, lambda, e_grid, trans, coeff, tri, D_prime_0, D_prime_0_flag, print_level = 0L, tol = 1e-05, maxit = 20L) {
-    .Call('debtLimits_qe_mat', PACKAGE = 'debtLimits', d_bar, QHat, Q, d_grid, G, lambda, e_grid, trans, coeff, tri, D_prime_0, D_prime_0_flag, print_level, tol, maxit)
-}
-
-var_lhood <- function(Y, par, print_level = 0L) {
-    .Call('debtLimits_var_lhood', PACKAGE = 'debtLimits', Y, par, print_level)
+qe_mat <- function(d_bar, QHat, Q, d_grid, G, shift, lambda, e_grid, trans, coeff, tri, D_prime_0, D_prime_0_flag, print_level = 0L, tol = 1e-05, maxit = 20L) {
+    .Call('debtLimits_qe_mat', PACKAGE = 'debtLimits', d_bar, QHat, Q, d_grid, G, shift, lambda, e_grid, trans, coeff, tri, D_prime_0, D_prime_0_flag, print_level, tol, maxit)
 }
 
 one_step_var_lhood <- function(Y, par, print_level = 0L) {
@@ -141,12 +137,8 @@ msw_var_lhood_p <- function(Y, p0, P, par, print_level = 0L) {
     .Call('debtLimits_msw_var_lhood_p', PACKAGE = 'debtLimits', Y, p0, P, par, print_level)
 }
 
-markov_sim <- function(n, M, s0, n_s) {
-    .Call('debtLimits_markov_sim', PACKAGE = 'debtLimits', n, M, s0, n_s)
-}
-
-ms_var <- function(a, A, Sigma, ms, m) {
-    .Call('debtLimits_ms_var', PACKAGE = 'debtLimits', a, A, Sigma, ms, m)
+sim_core <- function(i_idx_R, d_bar, d_grid, P, Q, params, d0, s_flag, s_in) {
+    .Call('debtLimits_sim_core', PACKAGE = 'debtLimits', i_idx_R, d_bar, d_grid, P, Q, params, d0, s_flag, s_in)
 }
 
 v_surp <- function(d, coeff, shift, tri) {
@@ -207,6 +199,22 @@ zed_2_num_d_i <- function(p, d, params, i, An, Cn, def) {
 
 zed_2_ana <- function(p, d, params, An, Bn, Cn, def) {
     .Call('debtLimits_zed_2_ana', PACKAGE = 'debtLimits', p, d, params, An, Bn, Cn, def)
+}
+
+zed_d_0 <- function(p, d, params, print_level) {
+    .Call('debtLimits_zed_d_0', PACKAGE = 'debtLimits', p, d, params, print_level)
+}
+
+zed_d_0_i <- function(p, d, params, i, print_level) {
+    .Call('debtLimits_zed_d_0_i', PACKAGE = 'debtLimits', p, d, params, i, print_level)
+}
+
+zed_2_ana_0 <- function(p, d, params) {
+    .Call('debtLimits_zed_2_ana_0', PACKAGE = 'debtLimits', p, d, params)
+}
+
+zed_2_ana_0_i <- function(p, d, params, i) {
+    .Call('debtLimits_zed_2_ana_0_i', PACKAGE = 'debtLimits', p, d, params, i)
 }
 
 ziter <- function(P, d_bar, QHat, d_grid, e_grid, tri, D_prime_0, D_prime_0_flag, params, print_level = 0L, tol = 1e-04, maxit = 100L, q_tol = 1e-04, q_maxit = 50L, d_tol = 1e-05, d_maxit = 20L, Q_out = FALSE) {

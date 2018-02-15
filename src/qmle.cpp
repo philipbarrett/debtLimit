@@ -15,7 +15,7 @@
 
 #include "qmle.hpp"
 
-// [[Rcpp::export]]
+/** // [[Rcpp::export]] **/
 double var_lhood( arma::mat Y, arma::vec par, int print_level = 0 ){
 // Computes the (negative) likelihood of the restricted VAR of the form:
 //    Y_t = a + A * Y_{t-1} + e_t,  e_t ~ N(0,Sigma)

@@ -1,0 +1,63 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{geometry}
+ \geometry{
+ total={170mm,257mm},
+ left=15mm,
+ top=15mm,
+ }
+
+\begin{document}
+
+\section*{VAR tables for post-war quarterly data}
+
+	{\def\arraystretch{1.2}\tabcolsep=2pt
+		\input{USA_1lag.tex}
+		\input{USA_4lag.tex}
+		\input{FRA_1lag.tex}
+		\input{FRA_4lag.tex}
+		\input{GBR_1lag.tex}
+		\input{GBR_4lag.tex}
+		\input{DEU_1lag.tex}
+		\input{DEU_4lag.tex}
+		\input{CAN_1lag.tex}
+		\input{CAN_4lag.tex}
+		
+		\input{all_1lag.tex}
+		\input{all_4lag.tex}
+		\input{all_rest_4lag.tex}
+	}
+
+	\newpage
+
+	\begin{figure}[htbp]
+	    \centering
+		\includegraphics[width=\textwidth]{/home/philip/Dropbox/2017/research/debtLimits/charts/W_LR_test_USA_4_lag.pdf}
+		\caption{Four-lag hypothesis tests for USA}
+	\end{figure}
+	
+	\begin{figure}[htbp]
+	    \centering
+		\includegraphics[width=\textwidth]{/home/philip/Dropbox/2017/research/debtLimits/charts/W_LR_test_FRA_4_lag.pdf}
+		\caption{Four-lag hypothesis tests for France}
+	\end{figure}
+	
+	\begin{figure}[htbp]
+	    \centering
+		\includegraphics[width=\textwidth]{/home/philip/Dropbox/2017/research/debtLimits/charts/W_LR_test_GBR_4_lag.pdf}
+		\caption{Four-lag hypothesis tests for UK}
+	\end{figure}
+
+	\begin{figure}[htbp]
+	    \centering
+		\includegraphics[width=\textwidth]{/home/philip/Dropbox/2017/research/debtLimits/charts/W_LR_test_DEU_4_lag.pdf}
+		\caption{Four-lag hypothesis tests for Germany}
+	\end{figure}
+
+	\begin{figure}[htbp]
+	    \centering
+		\includegraphics[width=\textwidth]{/home/philip/Dropbox/2017/research/debtLimits/charts/W_LR_test_CAN_4_lag.pdf}
+		\caption{Four-lag hypothesis tests for Canada}
+	\end{figure}
+
+\end{document}

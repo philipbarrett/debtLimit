@@ -30,15 +30,15 @@ gth.melt <- melt(gth,id="DATE", variable.name='Country', value.name='Growth rate
 ggplot(gth.melt,aes(x=DATE,y=`Growth rate`,colour=Country,group=Country)) + geom_line() +
   scale_x_date(labels=date_format("%Y"))
 
-gth.4 <- data.frame( DATE=gth$DATE, apply( gth[,-1], 2, function(x) filter(x,c(1,1,1,1), sides=1)/4 ) )
+gth.4 <- data.frame( DATE=gth$DATE, apply( gth[,-1], 2, function(x) stats::filter(x,c(1,1,1,1), sides=1)/4 ) )
 gth.4.melt <- melt(gth.4,id="DATE", variable.name='Country', value.name='Annual growth rate')
 ggplot(gth.4.melt,aes(x=DATE,y=`Annual growth rate`,colour=Country,group=Country)) + geom_line() +
   scale_x_date(labels=date_format("%Y"))
 
-usa.r.g <- data.frame( DATE=gth.4$DATE, 'Annual growth rate'=gth.4$USA, 'Riskfree rate'=rfr$USA )
-usa.r.g.melt <- melt(usa.r.g,id="DATE", variable.name='Series', value.name='Value')
-ggplot(usa.r.g.melt,aes(x=DATE,y=`Value`,colour=Series,group=Series)) + geom_line() +
-  scale_x_date(labels=date_format("%Y"))
+# usa.r.g <- data.frame( DATE=gth.4$DATE, 'Annual growth rate'=gth.4$USA, 'Riskfree rate'=rfr$USA )
+# usa.r.g.melt <- melt(usa.r.g,id="DATE", variable.name='Series', value.name='Value')
+# ggplot(usa.r.g.melt,aes(x=DATE,y=`Value`,colour=Series,group=Series)) + geom_line() +
+#   scale_x_date(labels=date_format("%Y"))
 
 rminusg <- rfr - gth
 rminusg$DATE <- as.Date(rfr$DATE)
